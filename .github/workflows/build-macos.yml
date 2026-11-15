@@ -1,0 +1,22 @@
+name: Build macOS (AU + VST3)
+
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      plugin:
+        description: "Plugin-navn (tom = alle)"
+        required: false
+        default: ""
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build, sign and validate
+        run: scripts/build.sh "${{ github.event.inputs.plugin || '--all' }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SBAudio-macOS
+          path: dist
