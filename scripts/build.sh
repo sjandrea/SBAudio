@@ -9,6 +9,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# CMake installert med «pip install --user cmake» ligger ikke i PATH som standard
+if ! command -v cmake >/dev/null; then
+  for d in "$HOME"/Library/Python/*/bin; do [ -x "$d/cmake" ] && PATH="$d:$PATH"; done
+fi
+command -v cmake >/dev/null || { echo "Fant ikke cmake. Installer med: python3 -m pip install --user cmake"; exit 1; }
+
 if [ $# -lt 1 ]; then
   echo "Bruk: scripts/build.sh <PluginNavn|--all> [Release|Debug]"; exit 1
 fi
