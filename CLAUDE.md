@@ -8,7 +8,7 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
 - `CMakeLists.txt` – rot: henter JUCE én gang, legger til `shared/` og alle `plugins/*` automatisk.
 - `cmake/SBAudio.cmake` – felles verdier (`SBAUDIO_COMPANY`, `SBAUDIO_MANUFACTURER`, `SBAUDIO_FORMATS`)
   og `sbaudio_configure_plugin(<target>)` med felles defines og lenking.
-- `shared/sbaudio_common/` – JUCE-modul med felles kode (farger, look & feel, målere). Lenkes inn i alle plugins.
+- `shared/sbaudio_common/` – JUCE-modul med felles kode (farger, `sbaudio::LookAndFeel`, `sbaudio::uiFont`). Lenkes inn i alle plugins.
   Kode som brukes av to eller flere plugins flyttes hit.
 - `plugins/<Navn>/` – én mappe per plugin: `CMakeLists.txt`, `Source/`, `README.md`, `docs/`.
   Mapper som starter med `_` ignoreres av bygget.
@@ -28,6 +28,7 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
 | Plugin   | PLUGIN_CODE | AU-type | Beskrivelse                  |
 |----------|-------------|---------|------------------------------|
 | VoxPilot | `Vxpl`      | aufx    | Automatisk vokal-rider       |
+| PrismEQ  | `Prsm`      | aufx    | Dynamisk parametrisk EQ      |
 
 ## Ny plugin
 

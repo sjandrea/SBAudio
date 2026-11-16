@@ -2,76 +2,12 @@
 
 using namespace juce;
 
-static Font uiFont (float h, bool bold = false)
-{
-    return Font (FontOptions (h, bold ? Font::bold : Font::plain));
-}
+using sbaudio::uiFont;
 
 //==============================================================================
 // Look & feel
 //==============================================================================
-VPLookAndFeel::VPLookAndFeel()
-{
-    setColour (ResizableWindow::backgroundColourId, vpcol::bg);
-    setColour (Label::textColourId, vpcol::text);
-    setColour (Slider::textBoxTextColourId, vpcol::text);
-    setColour (Slider::textBoxBackgroundColourId, vpcol::well);
-    setColour (Slider::textBoxOutlineColourId, vpcol::panelEdge);
-    setColour (Slider::textBoxHighlightColourId, vpcol::accent.withAlpha (0.4f));
-    setColour (Slider::rotarySliderFillColourId, vpcol::accent);
-    setColour (TextButton::buttonColourId, vpcol::well);
-    setColour (TextButton::textColourOffId, vpcol::textDim);
-    setColour (TextButton::textColourOnId, vpcol::bg);
-    setColour (TextEditor::backgroundColourId, vpcol::well);
-    setColour (TextEditor::textColourId, vpcol::text);
-    setColour (TextEditor::highlightColourId, vpcol::accent.withAlpha (0.4f));
-    setColour (CaretComponent::caretColourId, vpcol::accent);
-}
-
-void VPLookAndFeel::drawRotarySlider (Graphics& g, int x, int y, int w, int h, float pos,
-                                      float startAngle, float endAngle, Slider& s)
-{
-    const auto area   = Rectangle<float> ((float) x, (float) y, (float) w, (float) h).reduced (4.0f);
-    const float size  = jmin (area.getWidth(), area.getHeight());
-    const auto centre = area.getCentre();
-    const float r     = size * 0.5f;
-    const float angle = startAngle + pos * (endAngle - startAngle);
-    const auto fill   = s.findColour (Slider::rotarySliderFillColourId);
-    const float arcW  = jmax (2.5f, size * 0.045f);
-
-    // track + value arc
-    Path track;
-    track.addCentredArc (centre.x, centre.y, r - arcW, r - arcW, 0.0f, startAngle, endAngle, true);
-    g.setColour (vpcol::well);
-    g.strokePath (track, PathStrokeType (arcW + 2.0f, PathStrokeType::curved, PathStrokeType::rounded));
-
-    if (pos > 0.001f)
-    {
-        Path value;
-        value.addCentredArc (centre.x, centre.y, r - arcW, r - arcW, 0.0f, startAngle, angle, true);
-        g.setColour (fill.withAlpha (0.25f));
-        g.strokePath (value, PathStrokeType (arcW + 5.0f, PathStrokeType::curved, PathStrokeType::rounded));
-        g.setColour (fill);
-        g.strokePath (value, PathStrokeType (arcW, PathStrokeType::curved, PathStrokeType::rounded));
-    }
-
-    // knob body
-    const float br = r - arcW * 2.0f - 5.0f;
-    auto body = Rectangle<float> (br * 2.0f, br * 2.0f).withCentre (centre);
-    g.setColour (Colours::black.withAlpha (0.5f));
-    g.fillEllipse (body.translated (0.0f, 3.0f).expanded (1.0f));
-    g.setGradientFill (ColourGradient (Colour (0xff2c313b), body.getX(), body.getY(),
-                                       Colour (0xff14171c), body.getRight(), body.getBottom(), false));
-    g.fillEllipse (body);
-    g.setColour (Colour (0xff3a404b));
-    g.drawEllipse (body.reduced (0.5f), 1.0f);
-
-    // pointer
-    const auto p1 = centre.getPointOnCircumference (br * 0.30f, angle);
-    const auto p2 = centre.getPointOnCircumference (br * 0.82f, angle);
-    g.setColour (vpcol::text);
-    g.drawLine ({ p1, p2 }, jmax (2.0f, size * 0.035f));
-}
+VPLookAndFeel::VPLookAndFeel() = default; // colours come from sbaudio::LookAndFeel
 
 void VPLookAndFeel::drawFaderCap (Graphics& g, Rectangle<float> r, Colour stripe)
 {
@@ -145,42 +81,6 @@ void VPLookAndFeel::drawLinearSlider (Graphics& g, int x, int y, int w, int h, f
         g.fillRect (Rectangle<float> (cx - 1.0f, jmin (zeroY, pos), 2.0f, std::abs (zeroY - pos)));
         drawFaderCap (g, Rectangle<float> (capW, capH).withCentre ({ cx, pos }), vpcol::accent);
     }
-}
-
-void VPLookAndFeel::drawButtonBackground (Graphics& g, Button& b, const Colour&, bool over, bool down)
-{
-    auto r = b.getLocalBounds().toFloat().reduced (1.0f);
-    const bool on = b.getToggleState();
-    const auto onCol = b.findColour (TextButton::buttonOnColourId);
-
-    if (on)
-    {
-        g.setColour (onCol.withAlpha (0.25f));
-        g.fillRoundedRectangle (r.expanded (1.0f), 5.0f);
-        g.setGradientFill (ColourGradient (onCol.brighter (0.15f), r.getX(), r.getY(),
-                                           onCol.darker (0.25f), r.getX(), r.getBottom(), false));
-    }
-    else
-    {
-        g.setColour (vpcol::well.brighter (over ? 0.12f : 0.0f).darker (down ? 0.2f : 0.0f));
-    }
-    g.fillRoundedRectangle (r, 4.0f);
-    g.setColour (on ? onCol.brighter (0.3f) : vpcol::panelEdge);
-    g.drawRoundedRectangle (r.reduced (0.5f), 4.0f, 1.0f);
-}
-
-Font VPLookAndFeel::getTextButtonFont (TextButton&, int h) { return uiFont (jmin (12.0f, (float) h * 0.5f), true); }
-Font VPLookAndFeel::getLabelFont (Label& l)                 { return l.getFont(); }
-
-Label* VPLookAndFeel::createSliderTextBox (Slider& s)
-{
-    auto* l = LookAndFeel_V4::createSliderTextBox (s);
-    l->setFont (uiFont (12.0f, true));
-    l->setColour (Label::outlineColourId, vpcol::panelEdge);
-    l->setColour (Label::backgroundColourId, vpcol::well);
-    l->setColour (Label::textColourId, vpcol::text);
-    l->setWantsKeyboardFocus (false); // otherwise it opens its editor when the window gets focus
-    return l;
 }
 
 //==============================================================================

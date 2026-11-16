@@ -20,3 +20,4 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 
 #include "colours/sbaudio_Colours.h"
+#include "gui/sbaudio_LookAndFeel.h"

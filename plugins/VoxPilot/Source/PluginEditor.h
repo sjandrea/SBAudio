@@ -2,6 +2,7 @@
 
 #include <juce_audio_utils/juce_audio_utils.h>
 #include "PluginProcessor.h"
+#include <sbaudio_common/sbaudio_common.h>
 
 namespace vpcol
 {
@@ -21,19 +22,13 @@ namespace vpcol
 }
 
 //==============================================================================
-class VPLookAndFeel : public juce::LookAndFeel_V4
+class VPLookAndFeel : public sbaudio::LookAndFeel
 {
 public:
     VPLookAndFeel();
 
-    void drawRotarySlider (juce::Graphics&, int x, int y, int w, int h, float pos,
-                           float startAngle, float endAngle, juce::Slider&) override;
     void drawLinearSlider (juce::Graphics&, int x, int y, int w, int h, float pos, float minPos, float maxPos,
                            juce::Slider::SliderStyle, juce::Slider&) override;
-    void drawButtonBackground (juce::Graphics&, juce::Button&, const juce::Colour&, bool over, bool down) override;
-    juce::Font getTextButtonFont (juce::TextButton&, int h) override;
-    juce::Font getLabelFont (juce::Label&) override;
-    juce::Label* createSliderTextBox (juce::Slider&) override;
 
     static void drawFaderCap (juce::Graphics&, juce::Rectangle<float> r, juce::Colour stripe);
 };

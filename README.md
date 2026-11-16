@@ -5,6 +5,7 @@ Audio Unit- og VST3-plugins for Logic Pro.
 | Plugin | Hva den gjør |
 |---|---|
 | [VoxPilot](plugins/VoxPilot/README.md) | Automatisk vokal-rider |
+| [PrismEQ](plugins/PrismEQ/README.md) | Dynamisk parametrisk EQ (à la Pro-Q) for vokal og akustisk gitar |
 
 ## Bygge på Mac
 

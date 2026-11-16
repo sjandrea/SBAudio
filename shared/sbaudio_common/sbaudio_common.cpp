@@ -5,3 +5,4 @@
 #include "sbaudio_common.h"
 
 // Implementasjoner for felles kode legges inn her (eller som #include av .cpp-filer i undermapper).
+#include "gui/sbaudio_LookAndFeel.cpp"
