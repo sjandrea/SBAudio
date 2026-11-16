@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-latest  # macos-14 er faset ut av GitHub
     steps:
       - uses: actions/checkout@v4
       - name: Build, sign and validate
