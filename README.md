@@ -6,6 +6,7 @@ Audio Unit- og VST3-plugins for Logic Pro.
 |---|---|
 | [VoxPilot](plugins/VoxPilot/README.md) | Automatisk vokal-rider |
 | [PrismEQ](plugins/PrismEQ/README.md) | Dynamisk parametrisk EQ (à la Pro-Q) for vokal og akustisk gitar |
+| [OptoTube](plugins/OptoTube/README.md) | Opto/rør-kompressor (LA-2A møter CL 1B) for vokal og akustisk gitar |
 
 ## Bygge på Mac
 

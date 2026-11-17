@@ -5,11 +5,11 @@
   vendor:             SB Audio
   version:            1.0.0
   name:               SB Audio common
-  description:        Felles kode for SB Audio-plugins (farger, look & feel, målere).
+  description:        Felles kode for SB Audio-plugins (farger, look & feel, presets).
   license:            Proprietary
   minimumCppStandard: 17
 
-  dependencies:       juce_gui_basics
+  dependencies:       juce_gui_basics juce_audio_processors
 
  END_JUCE_MODULE_DECLARATION
 *******************************************************************************/
@@ -18,6 +18,9 @@
 #define SBAUDIO_COMMON_H_INCLUDED
 
 #include <juce_gui_basics/juce_gui_basics.h>
+#include <juce_audio_processors/juce_audio_processors.h>
 
 #include "colours/sbaudio_Colours.h"
 #include "gui/sbaudio_LookAndFeel.h"
+#include "presets/sbaudio_PresetManager.h"
+#include "gui/sbaudio_PresetBar.h"
