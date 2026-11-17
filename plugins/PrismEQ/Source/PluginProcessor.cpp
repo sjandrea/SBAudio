@@ -1,6 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "PresetManager.h"
+#include "FactoryPresets.h"
 
 using namespace juce;
 using namespace prism;
@@ -130,7 +130,10 @@ PrismEQProcessor::PrismEQProcessor()
     for (auto& d : dynGainDb)
         d = 0.0f;
 
-    presets = std::make_unique<PresetManager> (*this);
+    // Same folder and file extension as before, so existing user presets keep working.
+    presets = std::make_unique<sbaudio::PresetManager> (apvts, "PrismEQ", ".prismpreset", prism::factoryPresets(),
+                                                        Array<Identifier> { Identifier ("displayRange"), Identifier ("analyzer") });
+    presets->setGatingParameters ([] (const String& id) { return id.endsWith ("_used"); });
     startTimerHz (15);
 }
 

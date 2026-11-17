@@ -38,7 +38,8 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
 1. Kopier `plugins/VoxPilot/CMakeLists.txt` til `plugins/<Navn>/` og endre navn, bundle-ID, `PLUGIN_CODE`,
    beskrivelse, `AU_MAIN_TYPE` (`kAudioUnitType_Effect` / `MusicDevice` for instrument) og `VST3_CATEGORIES`.
 2. Lag `Source/PluginProcessor.*` og `Source/PluginEditor.*`. Bruk `sbaudio::colours` og felles komponenter fra
-   `sbaudio_common` så pluginene ser like ut.
+   `sbaudio_common` så pluginene ser like ut. Presets: `sbaudio::PresetManager` (fabrikk + egne i
+   `~/Library/Audio/Presets/SB Audio/<Navn>`) og `sbaudio::PresetBar` – se OptoTube for et enkelt eksempel.
 3. Legg pluginen inn i registeret over og lag en `README.md` (samme oppbygging som VoxPilot).
 4. Bygg med `scripts/build.sh <Navn>` og sørg for at `auval` passerer.
 

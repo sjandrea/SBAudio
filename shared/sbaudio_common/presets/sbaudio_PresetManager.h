@@ -24,6 +24,10 @@ namespace sbaudio
 
         struct Entry { juce::String name; bool factory; int index; };
 
+        /** Parameters that switch something on/off (e.g. "band in use"). When a factory preset
+            loads they are switched off first and on last, so nothing is heard with half-set values. */
+        void setGatingParameters (std::function<bool (const juce::String& paramID)> isGating) { gating = std::move (isGating); }
+
         int getNumFactoryPresets() const { return (int) factory.size(); }
         juce::String getFactoryPresetName (int) const;
         void loadFactoryPreset (int);
@@ -52,5 +56,6 @@ namespace sbaudio
         juce::String pluginName, extension;
         std::vector<FactoryPreset> factory;
         juce::Array<juce::Identifier> keepOnLoad;
+        std::function<bool (const juce::String&)> gating;
     };
 }

@@ -58,27 +58,6 @@ private:
 };
 
 //==============================================================================
-/** Inline "save preset" dialog drawn over the editor. */
-class SaveOverlay : public juce::Component
-{
-public:
-    SaveOverlay();
-    void show (const juce::String& initialName);
-    void paint (juce::Graphics&) override;
-    void resized() override;
-    void mouseDown (const juce::MouseEvent&) override { setVisible (false); }
-    std::function<void (const juce::String&)> onSave;
-    std::function<bool (const juce::String&)> exists;
-
-private:
-    juce::Rectangle<int> box() const;
-    void updateHint();
-    juce::TextEditor name;
-    juce::TextButton saveBtn { "LAGRE" }, cancelBtn { "AVBRYT" };
-    juce::Label hint;
-};
-
-//==============================================================================
 class PrismEQEditor : public juce::AudioProcessorEditor, private juce::Timer
 {
 public:
@@ -92,8 +71,6 @@ public:
 
 private:
     void timerCallback() override;
-    void showPresetMenu();
-    void refreshPresetLabel();
     void setStateProperty (const char* id, const juce::var& v);
 
     PrismEQProcessor& proc;
@@ -103,7 +80,7 @@ private:
     BandPanel bandPanel;
 
     // top bar
-    juce::TextButton prevBtn { "<" }, nextBtn { ">" }, presetBtn, saveBtn { "LAGRE" };
+    sbaudio::PresetBar presetBar;
     juce::TextButton aBtn { "A" }, bBtn { "B" }, copyBtn { juce::CharPointer_UTF8 ("A→B") };
     juce::TextButton undoBtn { "ANGRE" }, redoBtn { juce::CharPointer_UTF8 ("GJØR OM") };
     juce::ComboBox modeBox, characterBox, analyzerBox, rangeBox;
@@ -117,11 +94,9 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> autoAtt, invAtt;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> modeAtt, charAtt;
 
-    SaveOverlay saveOverlay;
     juce::TooltipWindow tooltips { this, 700 };
 
     bool userTouched = false;
-    juce::String shownPreset;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PrismEQEditor)
 };

@@ -21,8 +21,7 @@ juce_add_plugin(PrismEQ
 target_sources(PrismEQ PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
-    Source/EqGraph.cpp
-    Source/PresetManager.cpp)
+    Source/EqGraph.cpp)
 
 target_link_libraries(PrismEQ PRIVATE juce::juce_dsp)
 

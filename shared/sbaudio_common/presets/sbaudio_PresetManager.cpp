@@ -35,6 +35,8 @@ void PresetManager::loadFactoryPreset (int i)
         return;
 
     const auto& preset = factory[(size_t) i];
+    struct Change { RangedAudioParameter* param; float value; bool gate; };
+    std::vector<Change> changes;
     for (auto* base : apvts.processor.getParameters())
     {
         auto* p = dynamic_cast<RangedAudioParameter*> (base);
@@ -45,8 +47,13 @@ void PresetManager::loadFactoryPreset (int i)
         for (const auto& [id, plain] : preset.values)
             if (id == p->getParameterID())
                 norm = p->convertTo0to1 (plain);
-        setParam (*p, norm);
+        changes.push_back ({ p, norm, gating != nullptr && gating (p->getParameterID()) });
     }
+
+    // gates that turn off -> everything else -> gates that turn on
+    for (auto& c : changes) if (c.gate && c.value <= c.param->getValue()) setParam (*c.param, c.value);
+    for (auto& c : changes) if (! c.gate) setParam (*c.param, c.value);
+    for (auto& c : changes) if (c.gate && c.value > c.param->getValue()) setParam (*c.param, c.value);
     setCurrent (preset.name, true);
 }
 

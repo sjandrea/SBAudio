@@ -2,9 +2,8 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
+#include <sbaudio_common/sbaudio_common.h>
 #include "EqDsp.h"
-
-class PresetManager;
 
 namespace ParamIDs
 {
@@ -85,7 +84,7 @@ public:
 
     //==========================================================================
     juce::AudioProcessorValueTreeState apvts;
-    std::unique_ptr<PresetManager> presets;
+    std::unique_ptr<sbaudio::PresetManager> presets;
 
     prism::BandState getBandState (int band) const;
     /** Static gain scale (0..2) as a factor. */

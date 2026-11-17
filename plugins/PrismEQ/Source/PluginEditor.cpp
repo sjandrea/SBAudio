@@ -1,5 +1,4 @@
 #include "PluginEditor.h"
-#include "PresetManager.h"
 
 using namespace juce;
 using namespace prism;
@@ -249,80 +248,8 @@ void OutputMeter::paint (Graphics& g)
 }
 
 //==============================================================================
-SaveOverlay::SaveOverlay()
-{
-    name.setFont (uiFont (14.0f));
-    name.setJustification (Justification::centredLeft);
-    name.onReturnKey = [this] { saveBtn.triggerClick(); };
-    name.onEscapeKey = [this] { setVisible (false); };
-    name.onTextChange = [this] { updateHint(); };
-    addAndMakeVisible (name);
-    saveBtn.setColour (TextButton::buttonOnColourId, col::accent);
-    saveBtn.setToggleState (true, dontSendNotification);
-    saveBtn.onClick = [this]
-    {
-        const auto n = name.getText().trim();
-        if (n.isEmpty())
-            return;
-        setVisible (false);
-        if (onSave) onSave (n);
-    };
-    cancelBtn.onClick = [this] { setVisible (false); };
-    addAndMakeVisible (saveBtn);
-    addAndMakeVisible (cancelBtn);
-    hint.setFont (uiFont (11.0f));
-    hint.setColour (Label::textColourId, col::amber);
-    addAndMakeVisible (hint);
-}
-
-void SaveOverlay::show (const String& initialName)
-{
-    name.setText (initialName, dontSendNotification);
-    updateHint();
-    setVisible (true);
-    toFront (true);
-    name.grabKeyboardFocus();
-    name.selectAll();
-}
-
-void SaveOverlay::updateHint()
-{
-    const auto n = name.getText().trim();
-    const bool ex = n.isNotEmpty() && exists && exists (n);
-    hint.setText (ex ? CharPointer_UTF8 ("Finnes allerede – lagring overskriver den.") : String(), dontSendNotification);
-    saveBtn.setButtonText (ex ? "OVERSKRIV" : "LAGRE");
-}
-
-Rectangle<int> SaveOverlay::box() const { return getLocalBounds().withSizeKeepingCentre (380, 150); }
-
-void SaveOverlay::paint (Graphics& g)
-{
-    g.fillAll (Colours::black.withAlpha (0.55f));
-    auto b = box().toFloat();
-    g.setColour (col::panel);
-    g.fillRoundedRectangle (b, 8.0f);
-    g.setColour (col::panelEdge);
-    g.drawRoundedRectangle (b, 8.0f, 1.0f);
-    g.setColour (col::text);
-    g.setFont (uiFont (14.0f, true));
-    g.drawText ("Lagre preset", b.reduced (18.0f, 12.0f).removeFromTop (20.0f), Justification::centredLeft);
-}
-
-void SaveOverlay::resized()
-{
-    auto b = box().reduced (18, 12);
-    b.removeFromTop (26);
-    name.setBounds (b.removeFromTop (30));
-    hint.setBounds (b.removeFromTop (22));
-    auto row = b.removeFromBottom (30);
-    saveBtn.setBounds (row.removeFromRight (100));
-    row.removeFromRight (8);
-    cancelBtn.setBounds (row.removeFromRight (90));
-}
-
-//==============================================================================
 PrismEQEditor::PrismEQEditor (PrismEQProcessor& p)
-    : AudioProcessorEditor (&p), proc (p), graph (p), bandPanel (p)
+    : AudioProcessorEditor (&p), proc (p), graph (p), bandPanel (p), presetBar (*p.presets)
 {
     setLookAndFeel (&lnf);
 
@@ -333,14 +260,8 @@ PrismEQEditor::PrismEQEditor (PrismEQProcessor& p)
     bandPanel.onEdit = [this] { userTouched = true; };
 
     // ---- presets ----
-    for (auto* b : { &prevBtn, &nextBtn, &presetBtn, &saveBtn })
-        addAndMakeVisible (b);
-    prevBtn.onClick = [this] { userTouched = true; proc.presets->step (-1); refreshPresetLabel(); };
-    nextBtn.onClick = [this] { userTouched = true; proc.presets->step (1); refreshPresetLabel(); };
-    presetBtn.onClick = [this] { showPresetMenu(); };
-    presetBtn.setTooltip ("Velg preset");
-    saveBtn.onClick = [this] { saveOverlay.show (proc.presets->isCurrentFactory() ? String() : proc.presets->getCurrentPresetName()); };
-    saveBtn.setTooltip (CharPointer_UTF8 ("Lagre innstillingene som egen preset"));
+    addAndMakeVisible (presetBar);
+    presetBar.onPresetLoaded = [this] { userTouched = true; };
 
     // ---- A/B, undo ----
     for (auto* b : { &aBtn, &bBtn, &copyBtn, &undoBtn, &redoBtn })
@@ -403,16 +324,7 @@ PrismEQEditor::PrismEQEditor (PrismEQProcessor& p)
     scaleKnob.slider.setTooltip (CharPointer_UTF8 ("Skalerer gain på alle bånd: 50 % = halv effekt, 200 % = dobbel"));
     invertBtn.setTooltip ("Snu polaritet");
 
-    // ---- save overlay ----
-    addChildComponent (saveOverlay);
-    saveOverlay.exists = [this] (const String& n) { return proc.presets->userPresetExists (n); };
-    saveOverlay.onSave = [this] (const String& n)
-    {
-        if (! proc.presets->saveUserPreset (n))
-            AlertWindow::showMessageBoxAsync (MessageBoxIconType::WarningIcon, "PrismEQ",
-                                              String (CharPointer_UTF8 ("Kunne ikke lagre preset i ")) + PresetManager::getUserPresetDirectory().getFullPathName());
-        refreshPresetLabel();
-    };
+    presetBar.attachOverlayTo (*this);
 
     addMouseListener (this, true);
     setWantsKeyboardFocus (true);
@@ -421,7 +333,6 @@ PrismEQEditor::PrismEQEditor (PrismEQProcessor& p)
     setResizeLimits (900, 560, 2000, 1300);
     setSize (1120, 680);
 
-    refreshPresetLabel();
     proc.syncUndo (false);
     startTimerHz (30);
 }
@@ -471,13 +382,7 @@ void PrismEQEditor::resized()
     auto top = r.removeFromTop (44).reduced (8, 8);
     top.removeFromLeft (150);
 
-    prevBtn.setBounds (top.removeFromLeft (26));
-    top.removeFromLeft (3);
-    presetBtn.setBounds (top.removeFromLeft (jlimit (180, 300, getWidth() / 4)));
-    top.removeFromLeft (3);
-    nextBtn.setBounds (top.removeFromLeft (26));
-    top.removeFromLeft (6);
-    saveBtn.setBounds (top.removeFromLeft (62));
+    presetBar.setBounds (top.removeFromLeft (26 + 3 + jlimit (180, 300, getWidth() / 4) + 3 + 26 + 6 + 62));
     top.removeFromLeft (16);
     aBtn.setBounds (top.removeFromLeft (28));
     bBtn.setBounds (top.removeFromLeft (28));
@@ -510,7 +415,7 @@ void PrismEQEditor::resized()
     analyzerBox.setBounds (opts.removeFromLeft (150));
     opts.removeFromLeft (6);
     rangeBox.setBounds (opts.removeFromLeft (80));
-    saveOverlay.setBounds (getLocalBounds());
+    presetBar.getOverlay().setBounds (getLocalBounds());
 }
 
 void PrismEQEditor::mouseDown (const MouseEvent&)
@@ -529,65 +434,6 @@ bool PrismEQEditor::keyPressed (const KeyPress& k)
     return false;
 }
 
-void PrismEQEditor::refreshPresetLabel()
-{
-    auto n = proc.presets->getCurrentPresetName();
-    shownPreset = n;
-    presetBtn.setButtonText (n.isEmpty() ? String ("(ingen preset)") : n);
-}
-
-void PrismEQEditor::showPresetMenu()
-{
-    auto all = proc.presets->getAllPresets();
-    const auto cur = proc.presets->getCurrentPresetName();
-    const bool curFactory = proc.presets->isCurrentFactory();
-
-    PopupMenu m;
-    m.addSectionHeader ("Fabrikk-presets");
-    bool anyUser = false;
-    for (int i = 0; i < (int) all.size(); ++i)
-    {
-        const auto& e = all[(size_t) i];
-        if (! e.factory && ! anyUser)
-        {
-            m.addSeparator();
-            m.addSectionHeader ("Mine presets");
-            anyUser = true;
-        }
-        m.addItem (i + 1, e.name, true, e.name == cur && e.factory == curFactory);
-    }
-    if (! anyUser)
-    {
-        m.addSeparator();
-        m.addSectionHeader ("Mine presets");
-        m.addItem (-1, CharPointer_UTF8 ("(ingen ennå – trykk LAGRE)"), false);
-    }
-    m.addSeparator();
-    m.addItem (5000, CharPointer_UTF8 ("Lagre som ny…"));
-    m.addItem (5001, String (CharPointer_UTF8 ("Slett «")) + cur + String (CharPointer_UTF8 ("»")), ! curFactory && cur.isNotEmpty());
-    m.addItem (5002, "Vis preset-mappen i Finder");
-
-    m.showMenuAsync (PopupMenu::Options().withTargetComponent (presetBtn), [this, all] (int r)
-    {
-        if (r >= 1 && r <= (int) all.size())
-        {
-            userTouched = true;
-            proc.presets->load (all[(size_t) r - 1]);
-        }
-        else if (r == 5000)
-            saveOverlay.show ({});
-        else if (r == 5001)
-            proc.presets->deleteUserPreset (proc.presets->getCurrentPresetName());
-        else if (r == 5002)
-        {
-            auto dir = PresetManager::getUserPresetDirectory();
-            dir.createDirectory();
-            dir.startAsProcess();
-        }
-        refreshPresetLabel();
-    });
-}
-
 void PrismEQEditor::timerCallback()
 {
     graph.update();
@@ -604,9 +450,6 @@ void PrismEQEditor::timerCallback()
     aBtn.setToggleState (proc.getABSlot() == 0, dontSendNotification);
     bBtn.setToggleState (proc.getABSlot() == 1, dontSendNotification);
     copyBtn.setButtonText (proc.getABSlot() == 0 ? CharPointer_UTF8 ("A→B") : CharPointer_UTF8 ("B→A"));
-
-    if (proc.presets->getCurrentPresetName() != shownPreset)
-        refreshPresetLabel();
 
     const bool linear = proc.apvts.getRawParameterValue (ParamIDs::mode)->load() > 0.5f;
     modeBox.setColour (ComboBox::textColourId, linear ? col::amber : col::text);
