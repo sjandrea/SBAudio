@@ -13,6 +13,7 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
 - `plugins/<Navn>/` – én mappe per plugin: `CMakeLists.txt`, `Source/`, `README.md`, `docs/`.
   Mapper som starter med `_` ignoreres av bygget.
 - `scripts/build.sh <Navn>|--all [Release|Debug]` – bygg, installer, signer, `auval`, kopier til `dist/`.
+- `scripts/make-installer.sh [versjon]` – lager `dist/SBAudio-<versjon>.pkg` av det som ligger i `dist/`.
 
 ## Faste regler
 

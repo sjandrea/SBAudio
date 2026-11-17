@@ -16,7 +16,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build, sign and validate
         run: scripts/build.sh "${{ github.event.inputs.plugin || '--all' }}"
+      - name: Build installer package
+        run: scripts/make-installer.sh
       - uses: actions/upload-artifact@v4
         with:
           name: SBAudio-macOS
-          path: dist
+          path: |
+            dist
+            !dist/*.pkg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SBAudio-Installer
+          path: dist/*.pkg
