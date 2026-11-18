@@ -6,14 +6,7 @@
 #include "EqGraph.h"
 
 //==============================================================================
-/** Rotary knob with a caption and an editable value box. */
-struct Knob : public juce::Component
-{
-    explicit Knob (const juce::String& caption);
-    void resized() override;
-    juce::Slider slider { juce::Slider::RotaryHorizontalVerticalDrag, juce::Slider::TextBoxBelow };
-    juce::Label label;
-};
+using Knob = sbaudio::Knob;
 
 //==============================================================================
 /** Controls for the selected band. */

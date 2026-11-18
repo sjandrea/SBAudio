@@ -6,5 +6,6 @@
 
 // Implementasjoner for felles kode legges inn her (eller som #include av .cpp-filer i undermapper).
 #include "gui/sbaudio_LookAndFeel.cpp"
+#include "gui/sbaudio_Knob.cpp"
 #include "presets/sbaudio_PresetManager.cpp"
 #include "gui/sbaudio_PresetBar.cpp"
