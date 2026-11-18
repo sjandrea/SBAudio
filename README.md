@@ -28,8 +28,9 @@ scripts/build.sh --all
 scripts/make-installer.sh          # -> dist/SBAudio-<versjon>.pkg
 ```
 
-Pakken installerer alle plugins for alle brukere: AU i `/Library/Audio/Plug-Ins/Components`, VST3 i
-`/Library/Audio/Plug-Ins/VST3`. Under «Tilpass» i installasjonsprogrammet kan man velge bort plugins eller formater.
+Pakken installerer for alle brukere: AU i `/Library/Audio/Plug-Ins/Components`, VST3 i
+`/Library/Audio/Plug-Ins/VST3`. Installasjonsprogrammet viser alltid en liste der brukeren krysser av hvilke plugins
+som skal installeres, og kan åpne hver plugin for å velge bort AU eller VST3.
 Installasjonen krever administratorpassord.
 
 Pakken er ikke signert med Apple Developer ID. Da stopper macOS den første gang den åpnes. Gå til

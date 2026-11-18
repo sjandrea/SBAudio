@@ -45,6 +45,7 @@ CHOICES_OUTLINE=""
 CHOICES=""
 REFS=""
 
+# Hver plugin blir en gruppe i «Tilpass»-skjermen med AU og VST3 som undervalg.
 add_pkg() { # <bundle-sti> <installasjonsmappe> <pkg-id> <tittel> <beskrivelse>
   local src="$1" dest="$2" id="$3" title="$4" desc="$5"
   local root="$WORK/root/$id"
@@ -57,19 +58,27 @@ add_pkg() { # <bundle-sti> <installasjonsmappe> <pkg-id> <tittel> <beskrivelse>
   pkgbuild --root "$root" --component-plist "$WORK/$id.plist" \
     --identifier "$id" --version "$VERSION" --install-location "$dest" \
     --scripts "$WORK/scripts" "$WORK/pkgs/$id.pkg" >/dev/null
-  CHOICES_OUTLINE+="        <line choice=\"$id\"/>"$'\n'
+  GROUP_LINES+="            <line choice=\"$id\"/>"$'\n'
   CHOICES+="    <choice id=\"$id\" title=\"$title\" description=\"$desc\">
         <pkg-ref id=\"$id\"/>
     </choice>"$'\n'
   REFS+="    <pkg-ref id=\"$id\" version=\"$VERSION\">$id.pkg</pkg-ref>"$'\n'
 }
 
+plugin_description() { # første linje i pluginens README, f.eks. «OptoTube – opto/rør-kompressor»
+  local readme="plugins/$1/README.md"
+  [ -f "$readme" ] && sed -n '1s/^# *//p' "$readme" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/"/\&quot;/g' || echo "$1"
+}
+
 for p in "${PLUGINS[@]}"; do
   lower=$(echo "$p" | tr '[:upper:]' '[:lower:]')
+  GROUP_LINES=""
   [ -d "dist/$p.component" ] && add_pkg "dist/$p.component" /Library/Audio/Plug-Ins/Components \
     "com.sbaudio.$lower.au" "$p – Audio Unit" "$p for Logic Pro, GarageBand og andre AU-verter."
   [ -d "dist/$p.vst3" ] && add_pkg "dist/$p.vst3" /Library/Audio/Plug-Ins/VST3 \
     "com.sbaudio.$lower.vst3" "$p – VST3" "$p for VST3-verter (Ableton Live, Cubase, Reaper …)."
+  CHOICES_OUTLINE+="        <line choice=\"com.sbaudio.$lower\">"$'\n'"$GROUP_LINES        </line>"$'\n'
+  CHOICES+="    <choice id=\"com.sbaudio.$lower\" title=\"$p\" description=\"$(plugin_description "$p")\"/>"$'\n'
 done
 
 LIST=$(printf '<li>%s</li>' "${PLUGINS[@]}")
@@ -78,8 +87,8 @@ cat > "$WORK/resources/welcome.html" <<EOF
 <h2>SB Audio $VERSION</h2>
 <p>Denne pakken installerer:</p><ul>$LIST</ul>
 <p>Audio Unit-versjonene legges i <code>/Library/Audio/Plug-Ins/Components</code>,
-VST3 i <code>/Library/Audio/Plug-Ins/VST3</code>. Under «Tilpass» kan du velge bort
-plugins eller formater.</p>
+VST3 i <code>/Library/Audio/Plug-Ins/VST3</code>. På neste side velger du hvilke plugins
+(og formater) som skal installeres.</p>
 <p>Start Logic Pro på nytt etter installasjonen.</p>
 </body></html>
 EOF
@@ -100,7 +109,7 @@ cat > "$WORK/distribution.xml" <<EOF
     <organization>com.sbaudio</organization>
     <welcome file="welcome.html" mime-type="text/html"/>
     <conclusion file="conclusion.html" mime-type="text/html"/>
-    <options customize="allow" require-scripts="false" hostArchitectures="arm64,x86_64"/>
+    <options customize="always" require-scripts="false" hostArchitectures="arm64,x86_64"/>
     <domains enable_localSystem="true"/>
     <os-version min="11.0"/>
     <choices-outline>
