@@ -34,6 +34,7 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
 | PrismEQ  | `Prsm`      | aufx    | Dynamisk parametrisk EQ      |
 | OptoTube | `Optb`      | aufx    | Opto/rør-kompressor (LA-2A + CL 1B) |
 | Ember    | `Embr`      | aufx    | Multiband-metning (à la Saturn) |
+| Aura     | `Aura`      | aufx    | Reverb for vokal og akustisk gitar |
 
 ## Ny plugin
 

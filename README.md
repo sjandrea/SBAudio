@@ -8,6 +8,7 @@ Audio Unit- og VST3-plugins for Logic Pro.
 | [PrismEQ](plugins/PrismEQ/README.md) | Dynamisk parametrisk EQ (à la Pro-Q) for vokal og akustisk gitar |
 | [OptoTube](plugins/OptoTube/README.md) | Opto/rør-kompressor (LA-2A møter CL 1B) for vokal og akustisk gitar |
 | [Ember](plugins/Ember/README.md) | Multiband-metning (à la Saturn) med vokal-presets |
+| [Aura](plugins/Aura/README.md) | Enkel reverb for vokal og akustisk gitar (hall, plate, rom, kammer, vintage) |
 
 ## Bygge på Mac
 
