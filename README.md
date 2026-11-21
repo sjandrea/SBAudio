@@ -66,7 +66,7 @@ ikke finner to versjoner.
 ### GitHub
 
 Workflowen `.github/workflows/build-macos.yml` bygger og validerer alle plugins ved hver push og legger dem ved
-som nedlastbare artefakter: `SBAudio-Installer` (pakken) og `SBAudio-macOS` (løse plugins). For løse plugins, etter nedlasting: `xattr -dr com.apple.quarantine <Plugin>.component` før du kopierer
+som nedlastbare artefakter: `SBAudio-Installer-App` (diskbilde med installasjonsappen), `SBAudio-Installer` (pakken) og `SBAudio-macOS` (løse plugins). For løse plugins, etter nedlasting: `xattr -dr com.apple.quarantine <Plugin>.component` før du kopierer
 den til `~/Library/Audio/Plug-Ins/Components/`.
 
 JUCE er lisensiert under AGPLv3 / JUCE-lisens (gratis for personlig bruk under omsetningsgrensen).

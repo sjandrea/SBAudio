@@ -18,13 +18,20 @@ jobs:
         run: scripts/build.sh "${{ github.event.inputs.plugin || '--all' }}"
       - name: Build installer package
         run: scripts/make-installer.sh
+      - name: Build installer app (.dmg)
+        run: scripts/make-installer-app.sh
       - uses: actions/upload-artifact@v4
         with:
           name: SBAudio-macOS
           path: |
             dist
             !dist/*.pkg
+            !dist/*.dmg
       - uses: actions/upload-artifact@v4
         with:
           name: SBAudio-Installer
           path: dist/*.pkg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SBAudio-Installer-App
+          path: dist/*.dmg
