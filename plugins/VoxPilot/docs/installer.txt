@@ -1,0 +1,1 @@
+Automatisk vokal-rider. Måler vokalnivået hele tiden og justerer gainen mykt opp og ned, slik at vokalen ligger jevnt rundt et målnivå – før kompressoren og uten å endre klangen. Bevegelsene kan skrives som automasjon i Logic.

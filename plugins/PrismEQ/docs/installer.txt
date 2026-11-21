@@ -1,0 +1,1 @@
+Dynamisk parametrisk EQ med opptil 24 bånd. Du jobber direkte i den store grafen med sanntids-spektrum, og hvert bånd kan reagere dynamisk på signalet. Fabrikk-presetene dekker vokal og akustisk gitar.

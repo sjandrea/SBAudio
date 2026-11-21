@@ -1,0 +1,1 @@
+Smart EQ som retter opp tonal balanse automatisk. Learn lytter på sporet og lager en korreksjonskurve mot en målprofil, mens Recover og Tame justerer EQ-en fortløpende – løfter det som er maskert og demper det som stikker ut.

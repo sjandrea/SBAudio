@@ -1,0 +1,1 @@
+Multiband-metning med opptil seks frekvensbånd. Hvert bånd får sin egen metningstype, drive, tone og mix, så du kan gi vokalen varme og tetthet i mellomtonen uten at bunnen blir grøtete eller diskanten sprø.

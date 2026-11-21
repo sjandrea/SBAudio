@@ -1,0 +1,1 @@
+Algoritmisk reverb for vokal og akustisk gitar. Velg en type, still inn pre-delay og decay, og du er i mål. Frodig, modulert hale med høy tetthet, pluss en mørk vintage-modus. Brukes på en aux/bus (alltid 100 % wet).

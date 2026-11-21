@@ -16,6 +16,8 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
   Mapper som starter med `_` ignoreres av bygget.
 - `scripts/build.sh <Navn>|--all [Release|Debug]` – bygg, installer, signer, `auval`, kopier til `dist/`.
 - `scripts/make-installer.sh [versjon]` – lager `dist/SBAudio-<versjon>.pkg` av det som ligger i `dist/`.
+- `scripts/make-installer-app.sh [versjon]` – lager `dist/SBAudio-<versjon>.dmg` med en grafisk installasjonsapp
+  (`installer/SBAudioInstaller.swift`) som viser hver plugin som kort med bilde og beskrivelse.
 
 ## Faste regler
 
@@ -44,7 +46,8 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
 2. Lag `Source/PluginProcessor.*` og `Source/PluginEditor.*`. Bruk `sbaudio::colours` og felles komponenter fra
    `sbaudio_common` så pluginene ser like ut. Presets: `sbaudio::PresetManager` (fabrikk + egne i
    `~/Library/Audio/Presets/SB Audio/<Navn>`) og `sbaudio::PresetBar` – se OptoTube for et enkelt eksempel.
-3. Legg pluginen inn i registeret over og lag en `README.md` (samme oppbygging som VoxPilot).
+3. Legg pluginen inn i registeret over og lag en `README.md` (samme oppbygging som VoxPilot), `docs/screenshot.png`
+   og `docs/installer.txt` (2–3 setninger som vises i installasjonsappen).
 4. Bygg med `scripts/build.sh <Navn>` og sørg for at `auval` passerer.
 
 ## Bygging

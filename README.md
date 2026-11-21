@@ -24,7 +24,27 @@ Skriptet laster ned JUCE 8 automatisk (første gang), bygger universelle AU/VST3
 installerer i `~/Library/Audio/Plug-Ins/`, ad-hoc-signerer, kjører `auval` og legger kopier i `dist/`.
 Start Logic på nytt etterpå.
 
-### Installasjonspakke
+### Grafisk installasjonsprogram
+
+```bash
+scripts/build.sh --all
+scripts/make-installer-app.sh      # -> dist/SBAudio-<versjon>.dmg
+```
+
+![SB Audio Installer](installer/screenshot.jpg)
+
+Diskbildet inneholder **SB Audio Installer.app**. Appen viser alle plugins som kort med et bilde og en kort
+beskrivelse. Klikk på et kort for å velge det bort eller inn, velg AU og/eller VST3 nederst og trykk **Installer**.
+Plugins som allerede er installert, får merket *INSTALLERT*. Appen ber om administratorpassord og installerer i
+`/Library/Audio/Plug-Ins`. Den kan også fjerne gamle kopier i `~/Library/Audio/Plug-Ins` fra `scripts/build.sh`.
+
+Kortene bygges av `plugins/<Navn>/docs/screenshot.png` (bildet) og `plugins/<Navn>/docs/installer.txt` (2–3 setninger).
+Undertittelen hentes fra første linje i pluginens `README.md`. Kildekoden ligger i `installer/SBAudioInstaller.swift`.
+
+Appen er ad-hoc-signert. Første gang: høyreklikk › **Åpne**. Den kan også åpnes via **Systeminnstillinger › Personvern og
+sikkerhet › Åpne likevel**. Med en Developer ID: `SBAUDIO_APP_IDENTITY="Developer ID Application: …" scripts/make-installer-app.sh`.
+
+### Installasjonspakke (.pkg)
 
 ```bash
 scripts/build.sh --all
