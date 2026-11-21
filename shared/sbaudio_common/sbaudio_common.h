@@ -24,5 +24,6 @@
 #include "gui/sbaudio_LookAndFeel.h"
 #include "gui/sbaudio_Knob.h"
 #include "dsp/sbaudio_AnalyzerRing.h"
+#include "dsp/sbaudio_ReverbEngine.h"
 #include "presets/sbaudio_PresetManager.h"
 #include "gui/sbaudio_PresetBar.h"

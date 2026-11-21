@@ -1,0 +1,1 @@
+Atmosfærisk synth med fire lag som spilles samtidig: analog, wavetable, FM, granulær og støy. Den glødende Orb-kula former lyden mens du spiller, og arpeggiator, chorus, delay og reverb er innebygd. Kommer med pads, teksturer, keys, bass, lead og arp-presets.

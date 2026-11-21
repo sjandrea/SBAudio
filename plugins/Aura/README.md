@@ -92,7 +92,7 @@ Se rotens `README.md` for krav og detaljer.
 - Ingen latens. Mono inn → stereo ut støttes.
 - CPU: ca. 1 % av én kjerne (Apple Silicon, stereo, 48 kHz).
 - Målt etterklangstid følger Decay, og pluginen er stabil helt opp til 20 s.
-- Kilde: `Source/ReverbEngine.h` (DSP), `Source/PluginProcessor.*` (parametere), `Source/PluginEditor.*` (GUI),
+- Kilde: `shared/sbaudio_common/dsp/sbaudio_ReverbEngine.h` (DSP, deles med Nordlys), `Source/PluginProcessor.*` (parametere), `Source/PluginEditor.*` (GUI),
   `Source/FactoryPresets.h` (presets).
 
 Waves, Atlas, Valhalla og EMT er varemerker for sine respektive eiere. Aura er en egen konstruksjon og ingen kopi

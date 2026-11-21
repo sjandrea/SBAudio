@@ -10,7 +10,7 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
   og `sbaudio_configure_plugin(<target>)` med felles defines og lenking.
 - `shared/sbaudio_common/` – JUCE-modul med felles kode (farger, `sbaudio::LookAndFeel`, `sbaudio::uiFont`,
   `sbaudio::PresetManager` + `sbaudio::PresetBar` for fabrikk-/brukerpresets, `sbaudio::Knob`,
-  `sbaudio::AnalyzerRing` for spektrumanalysatorer). Lenkes inn i alle plugins.
+  `sbaudio::AnalyzerRing` for spektrumanalysatorer, `aura::Engine` reverb i `dsp/sbaudio_ReverbEngine.h`). Lenkes inn i alle plugins.
   Kode som brukes av to eller flere plugins flyttes hit.
 - `plugins/<Navn>/` – én mappe per plugin: `CMakeLists.txt`, `Source/`, `README.md`, `docs/`.
   Mapper som starter med `_` ignoreres av bygget.
@@ -41,6 +41,7 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
 | Aura     | `Aura`      | aufx    | Reverb for vokal og akustisk gitar |
 | Foss     | `Foss`      | aufx    | Smart EQ: Learn + profil (à la smart:EQ) og adaptiv Recover/Tame (à la Gullfoss) |
 | VoxHeat  | `Vxht`      | aufx    | Vokal-saturator (TG-konsoll + rør, à la Abbey Road Saturator) |
+| Nordlys  | `Nrdl`      | aumu    | Atmosfærisk synth: 4 lag, granulær, Orb, arp (à la Omnisphere) |
 
 ## Ny plugin
 

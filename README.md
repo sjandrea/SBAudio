@@ -11,6 +11,7 @@ Audio Unit- og VST3-plugins for Logic Pro.
 | [Aura](plugins/Aura/README.md) | Enkel reverb for vokal og akustisk gitar (hall, plate, rom, kammer, vintage) |
 | [Foss](plugins/Foss/README.md) | Smart EQ for tonal balanse: Learn mot målprofil (à la smart:EQ) + adaptiv Recover/Tame (à la Gullfoss) |
 | [VoxHeat](plugins/VoxHeat/README.md) | Vokal-saturator med TG-konsoll- og rørkarakter, vern mot sprø S-lyder og plosiver |
+| [Nordlys](plugins/Nordlys/README.md) | Atmosfærisk synth (instrument) med 4 lag, granulær syntese, Orb og arpeggiator (à la Omnisphere) |
 
 ## Bygge på Mac
 

@@ -2,7 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <sbaudio_common/sbaudio_common.h>
-#include "ReverbEngine.h"
+// Reverb engine (aura::Engine) lives in shared/sbaudio_common/dsp/sbaudio_ReverbEngine.h
 
 // NB: parameter IDs must never change once the plugin is in use (Logic projects/automation).
 namespace ParamIDs
