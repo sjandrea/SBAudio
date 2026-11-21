@@ -38,6 +38,7 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
 | Ember    | `Embr`      | aufx    | Multiband-metning (à la Saturn) |
 | Aura     | `Aura`      | aufx    | Reverb for vokal og akustisk gitar |
 | Foss     | `Foss`      | aufx    | Smart EQ: Learn + profil (à la smart:EQ) og adaptiv Recover/Tame (à la Gullfoss) |
+| VoxHeat  | `Vxht`      | aufx    | Vokal-saturator (TG-konsoll + rør, à la Abbey Road Saturator) |
 
 ## Ny plugin
 

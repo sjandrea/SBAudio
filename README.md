@@ -10,6 +10,7 @@ Audio Unit- og VST3-plugins for Logic Pro.
 | [Ember](plugins/Ember/README.md) | Multiband-metning (à la Saturn) med vokal-presets |
 | [Aura](plugins/Aura/README.md) | Enkel reverb for vokal og akustisk gitar (hall, plate, rom, kammer, vintage) |
 | [Foss](plugins/Foss/README.md) | Smart EQ for tonal balanse: Learn mot målprofil (à la smart:EQ) + adaptiv Recover/Tame (à la Gullfoss) |
+| [VoxHeat](plugins/VoxHeat/README.md) | Vokal-saturator med TG-konsoll- og rørkarakter, vern mot sprø S-lyder og plosiver |
 
 ## Bygge på Mac
 
