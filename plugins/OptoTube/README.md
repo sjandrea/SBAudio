@@ -2,8 +2,8 @@
 
 OptoTube er en Audio Unit / VST3-kompressor for vokal og akustisk gitar. Den kombinerer to klassikere:
 den myke, programavhengige **optiske** kompresjonen fra en LA-2A og den fleksible **rør-kompressoren** med
-manuell attack/release fra en Tube-Tech CL 1B. Utseendet er inspirert av CL 1B: stålblått rack-panel,
-svarte knapper med skala og et stort VU-meter i midten. Ingen sidechain – detektoren lytter bare på sporet selv.
+manuell attack/release fra en Tube-Tech CL 1B. Grensesnittet følger resten av SB Audio-pluginene: kompresjonskurve,
+historikk over nivå og demping, og metere for inn, demping og ut. Ingen sidechain – detektoren lytter bare på sporet selv.
 
 ![OptoTube](docs/screenshot.png)
 
@@ -13,14 +13,16 @@ svarte knapper med skala og et stort VU-meter i midten. Ingen sidechain – dete
 |---|---|
 | **Threshold** | Nivået der kompresjonen starter (tilsvarer *Peak Reduction* på LA-2A). Lavere = mer kompresjon. Måles mot toppnivå (dBFS). |
 | **Ratio** | 1,5:1 – 10:1. 2–4 er typisk for vokal og gitar, 8–10 nærmer seg limiting. Myk knekk (soft knee). |
-| **Mode** | **OPTO**: LA-2A-stil. Attack og release styres automatisk av signalet (se under), Attack/Release-knappene dimmes. **MAN**: CL 1B-stil, attack og release som du stiller dem. **BOTH**: begge kjører parallelt og den som demper mest vinner – den manuelle fanger raske topper, opto-delen rir nivået. Tilsvarer *Fixed + Manual* på CL 1B. |
-| **Attack** | 0,5–300 ms (MAN og BOTH). Lengre attack slipper anslaget gjennom – fint på akustisk gitar. |
-| **Release** | 50 ms – 10 s (MAN og BOTH). |
-| **Det. HPF** | Filtrerer bassen bort fra *detektoren* (ikke fra lyden): Off / 60 / 100 / 150 Hz. Hindrer pumping fra proximity-effekt, plopp og gitarkroppens boom. |
-| **Tube** | Rørkarakter 0–10: myk, asymmetrisk metning med mest 2. harmoniske. 0 = helt rent. |
+| **Modus** (knapperaden øverst) | **OPTO**: LA-2A-stil. Attack og release styres automatisk av signalet (se under), TID-panelet dimmes. **MANUAL**: CL 1B-stil, attack og release som du stiller dem. **OPTO + MANUAL**: begge kjører parallelt og den som demper mest vinner – den manuelle fanger raske topper, opto-delen rir nivået. Tilsvarer *Fixed + Manual* på CL 1B. |
+| **Attack** | 0,5–300 ms (MANUAL og OPTO + MANUAL). Lengre attack slipper anslaget gjennom – fint på akustisk gitar. |
+| **Release** | 50 ms – 10 s (MANUAL og OPTO + MANUAL). |
+| **Detektor-HPF** | Filtrerer bassen bort fra *detektoren* (ikke fra lyden): Off / 60 / 100 / 150 Hz. Hindrer pumping fra proximity-effekt, plopp og gitarkroppens boom. |
+| **Tube** | Rørkarakter 0–100 %: myk, asymmetrisk metning med mest 2. harmoniske. 0 = helt rent. |
 | **Gain** | Make-up gain på det komprimerte signalet (−12 til +24 dB). |
-| **Mix** | Parallellkompresjon: DRY = ukomprimert, WET = bare komprimert. |
-| **Meter** | VU-meteret viser **GR** (gain reduction), **INN** eller **UT** (0 VU = −18 dBFS RMS). Nede til høyre i meteret står verdien i tall. |
+| **Mix** | Parallellkompresjon: 0 % = ukomprimert, 100 % = bare komprimert. |
+| **Kurve** | Viser hvordan nivå inn blir til nivå ut med gjeldende Threshold, Ratio og modus. Prikken er nivået akkurat nå. |
+| **Historikk** | De siste 10 sekundene: demping (oransje, øverst), nivå inn (blått felt) og nivå ut (hvit linje). |
+| **INN / GR / UT** | Nivå inn, demping (gain reduction) og nivå ut, med verdien i tall øverst. |
 
 Dobbeltklikk på en knapp setter den tilbake til standardverdien. Vinduet kan skaleres fra hjørnet nede til høyre.
 
@@ -50,7 +52,7 @@ presets og åpne mappen i Finder.
 
 1. Sett **OptoTube** som insert på vokal- eller gitarsporet (*Audio Units → SB Audio → OptoTube*), gjerne etter EQ
    (f.eks. PrismEQ) og etter VoxPilot på vokal.
-2. Start med en preset, spill av den mest intense delen og still **Threshold** til VU-meteret viser 3–6 dB GR.
+2. Start med en preset, spill av den mest intense delen og still **Threshold** til GR-meteret viser 3–6 dB demping.
 3. Bruk **Gain** så nivået ut er omtrent som med pluginen av (sammenlign med Logics bypass-knapp).
 4. Skru **Tube** opp for mer varme og tetthet, og **Mix** ned for parallellkompresjon.
 

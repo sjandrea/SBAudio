@@ -193,7 +193,7 @@ namespace optotube
             }
         }
 
-    private:
+        /** Gain reduction (dB, positive) for a level 'over' dB above threshold. slope = 1 - 1/ratio. */
         static float staticCurve (float over, float slope, float knee) noexcept
         {
             if (2.0f * over <= -knee) return 0.0f;
@@ -202,6 +202,7 @@ namespace optotube
             return slope * x * x / (2.0f * knee);
         }
 
+    private:
         /** Asymmetric tube-style curve, unity gain for small signals, followed by a DC blocker. */
         float saturate (float x, float amount, int c) noexcept
         {

@@ -4,52 +4,65 @@
 #include <sbaudio_common/sbaudio_common.h>
 #include "PluginProcessor.h"
 
-namespace optotube::ui
+namespace optoui
 {
-    /** Hardware look: black knobs with aluminium skirt on a steel-blue faceplate. */
-    class HardwareLookAndFeel : public sbaudio::LookAndFeel
+    /** Live values shared by the displays (dB). */
+    struct Levels
     {
-    public:
-        void drawRotarySlider (juce::Graphics&, int x, int y, int w, int h, float pos,
-                               float startAngle, float endAngle, juce::Slider&) override;
+        float inDb = -100.0f;   // input level (peak-calibrated RMS, like the detector)
+        float outDb = -100.0f;
+        float grDb = 0.0f;      // gain reduction, positive
     };
 
-    /** Rotary control with engraved caption, scale labels around it and a value readout. */
-    class HardwareKnob : public juce::Component
+    /** Row of buttons that selects the mode (Opto / Manual / Opto + Manual). */
+    class ModeSelector : public juce::Component
     {
     public:
-        struct Mark { double value; juce::String text; };
-
-        HardwareKnob (const juce::String& caption, std::vector<Mark> marks, bool stepped = false);
-        void paint (juce::Graphics&) override;
+        explicit ModeSelector (juce::RangedAudioParameter&);
         void resized() override;
-        void enablementChanged() override { repaint(); }
-
-        juce::Slider slider { juce::Slider::RotaryHorizontalVerticalDrag, juce::Slider::NoTextBox };
 
     private:
-        juce::Rectangle<float> knobArea() const;
-        juce::String caption;
-        std::vector<Mark> marks;
-        bool stepped;
+        void setCurrent (int);
+        juce::OwnedArray<juce::TextButton> buttons;
+        juce::ParameterAttachment attachment;
     };
 
-    /** Analogue VU meter showing gain reduction, input or output level. */
-    class VuMeter : public juce::Component
+    /** Static compression curve (in -> out) with the current input level as a dot. */
+    class TransferCurve : public juce::Component
     {
     public:
-        enum Source { GainReduction = 0, Input, Output };
-        void setSource (int s) { source = s; repaint(); }
-        /** dB value to display: VU (0 = -18 dBFS) or minus gain reduction. */
-        void setValue (float vuDb);
-        void setReadout (const juce::String& s) { if (s != readout) { readout = s; repaint(); } }
+        void update (float thresholdDb, float ratio, int mode, float inDb);
         void paint (juce::Graphics&) override;
 
     private:
-        static float vuToProportion (float vu);
-        int source = GainReduction;
-        float needle = 0.0f;   // smoothed VU dB
-        juce::String readout;
+        float thr = -20.0f, ratio = 3.0f, inDb = -100.0f;
+        int mode = 0;
+    };
+
+    /** Scrolling history: input and output level, gain reduction hanging from the top. */
+    class History : public juce::Component
+    {
+    public:
+        static constexpr int numPoints = 300; // 10 s at 30 Hz
+        void push (const Levels&);
+        void paint (juce::Graphics&) override;
+
+    private:
+        std::array<Levels, numPoints> data {};
+        int write = 0;
+    };
+
+    /** IN / GR / UT bar meters. */
+    class Meters : public juce::Component
+    {
+    public:
+        void setLevels (const Levels&);
+        void paint (juce::Graphics&) override;
+
+    private:
+        Levels shown;
+        float grHold = 0.0f;
+        int holdFrames = 0;
     };
 }
 
@@ -62,7 +75,7 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
-    static constexpr int designW = 960, designH = 410;
+    static constexpr int designW = 900, designH = 540;
 
 private:
     /** Everything is laid out at design size inside this component and scaled as a whole. */
@@ -76,26 +89,30 @@ private:
     void timerCallback() override;
     void paintContent (juce::Graphics&);
     void layoutContent();
-    void setMeterSource (int);
-    void updateEnablement();
+    void updateTimeSection();
 
     OptoTubeProcessor& proc;
-    optotube::ui::HardwareLookAndFeel lnf;
+    sbaudio::LookAndFeel lnf;
     Content content { *this };
 
     sbaudio::PresetBar presetBar;
+    optoui::ModeSelector modeSelector;
+    juce::ComboBox hpfBox;
+    optoui::TransferCurve curve;
+    optoui::History history;
+    optoui::Meters meters;
 
-    using K = optotube::ui::HardwareKnob;
-    K threshold, ratio, attack, release, gain, mode, hpf, tube, mix;
-    optotube::ui::VuMeter meter;
-    juce::TextButton meterGr { "GR" }, meterIn { "INN" }, meterOut { "UT" };
+    sbaudio::Knob threshold { "THRESHOLD" }, ratio { "RATIO" }, attack { "ATTACK" }, release { "RELEASE" },
+                  tube { "TUBE" }, mix { "MIX" }, gain { "GAIN" };
 
-    std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>> attachments;
+    std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>> sliderAtts;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> hpfAtt;
     juce::TooltipWindow tooltips { this, 700 };
 
-    juce::Rectangle<int> faceplate, leftGroup, rightGroup, meterArea;
-    float lastGr = 0.0f, lastIn = 0.0f, lastOut = 0.0f;
+    juce::Rectangle<int> compPanel, timePanel, colourPanel;
+    optoui::Levels last;
     int framesWithoutAudio = 0;
+    bool timeIsAuto = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OptoTubeEditor)
 };
