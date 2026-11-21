@@ -35,6 +35,7 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
 | OptoTube | `Optb`      | aufx    | Opto/rør-kompressor (LA-2A + CL 1B) |
 | Ember    | `Embr`      | aufx    | Multiband-metning (à la Saturn) |
 | Aura     | `Aura`      | aufx    | Reverb for vokal og akustisk gitar |
+| Foss     | `Foss`      | aufx    | Smart EQ: Learn + profil (à la smart:EQ) og adaptiv Recover/Tame (à la Gullfoss) |
 
 ## Ny plugin
 

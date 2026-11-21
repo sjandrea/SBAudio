@@ -9,6 +9,7 @@ Audio Unit- og VST3-plugins for Logic Pro.
 | [OptoTube](plugins/OptoTube/README.md) | Opto/rør-kompressor (LA-2A møter CL 1B) for vokal og akustisk gitar |
 | [Ember](plugins/Ember/README.md) | Multiband-metning (à la Saturn) med vokal-presets |
 | [Aura](plugins/Aura/README.md) | Enkel reverb for vokal og akustisk gitar (hall, plate, rom, kammer, vintage) |
+| [Foss](plugins/Foss/README.md) | Smart EQ for tonal balanse: Learn mot målprofil (à la smart:EQ) + adaptiv Recover/Tame (à la Gullfoss) |
 
 ## Bygge på Mac
 
