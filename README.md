@@ -28,8 +28,18 @@ Start Logic på nytt etterpå.
 ### Grafisk installasjonsprogram
 
 ```bash
-scripts/build.sh --all
-scripts/make-installer-app.sh      # -> dist/SBAudio-<versjon>.dmg
+scripts/build.sh --all             # bygger alt og lager dist/SBAudio-<versjon>.dmg og .pkg
+scripts/make-installer-app.sh      # bare diskbildet, av det som ligger i dist/
+```
+
+**Nye plugins kommer med automatisk.** Alle mapper i `plugins/` med en ferdig bygget plugin i `dist/` havner i
+installasjonsfilene, og `scripts/build.sh` lager dem på nytt etter hvert bygg (`SBAUDIO_NO_INSTALLER=1` hopper over).
+Mangler `docs/installer.txt`, brukes starten av README-en. Mangler `docs/screenshot.png`, får kortet et navneskilt.
+
+**Release:** push en versjonstag, så bygger GitHub alt og legger diskbildet ut som release:
+
+```bash
+git tag 1.2.0 && git push origin 1.2.0
 ```
 
 ![SB Audio Installer](installer/screenshot.jpg)

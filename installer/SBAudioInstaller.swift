@@ -194,6 +194,12 @@ struct PluginCard: View {
                     Color.sbWell
                     if let img = Paths.image(plugin) {
                         Image(nsImage: img).resizable().aspectRatio(contentMode: .fit).padding(8)
+                    } else { // no screenshot yet – show a name plate
+                        VStack(spacing: 6) {
+                            Image(systemName: "waveform").font(.system(size: 34)).foregroundColor(.sbAccent)
+                            Text(plugin.name.uppercased()).font(.system(size: 22, weight: .heavy))
+                                .tracking(4).foregroundColor(.sbText)
+                        }
                     }
                 }
                 .overlay(Group {

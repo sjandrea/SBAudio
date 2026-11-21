@@ -54,13 +54,24 @@ for n in "${PLUGINS[@]}"; do
   tagline="$(echo "${tagline:0:1}" | tr '[:lower:]' '[:upper:]')${tagline:1}"
   if [ -f "$dir/docs/installer.txt" ]; then
     summary=$(tr '\n' ' ' < "$dir/docs/installer.txt" | sed 's/ *$//')
-  else # første avsnitt i README
-    summary=$(awk 'NR>1 && NF{p=1} p&&!NF{exit} p' "$dir/README.md" | tr '\n' ' ' | sed 's/\*\*//g; s/ *$//')
+  else # første avsnitt i README, kortet ned til ca. 300 tegn (hele setninger)
+    echo "Merk: plugins/$n/docs/installer.txt mangler – bruker starten av README.md"
+    summary=$(awk 'NR>1 && NF{p=1} p&&!NF{exit} p' "$dir/README.md" 2>/dev/null | tr '\n' ' ' \
+      | sed 's/\*\*//g; s/!\[[^]]*\]([^)]*)//g; s/ *$//')
+    summary=$(echo "$summary" | awk '{ out=""; n=split($0, s, /\. /);
+      for (k=1; k<=n; k++) { t = s[k] (k<n ? ". " : ""); if (length(out)>0 && length(out t)>300) break; out = out t }
+      sub(/ +$/, "", out); print out }')
+    [ -n "$summary" ] || summary="$PRODUCT fra SB Audio."
   fi
+  [ -n "$tagline" ] || tagline="SB Audio-plugin"
   hasAU=false; hasVST3=false
   [ -d "dist/$PRODUCT.component" ] && { hasAU=true; ditto --norsrc --noextattr "dist/$PRODUCT.component" "$RES/Plugins/$PRODUCT.component"; }
   [ -d "dist/$PRODUCT.vst3" ] && { hasVST3=true; ditto --norsrc --noextattr "dist/$PRODUCT.vst3" "$RES/Plugins/$PRODUCT.vst3"; }
-  [ -f "$dir/docs/screenshot.png" ] && sips -Z 1000 "$dir/docs/screenshot.png" --out "$RES/Images/$PRODUCT.png" >/dev/null
+  if [ -f "$dir/docs/screenshot.png" ]; then
+    sips -Z 1000 "$dir/docs/screenshot.png" --out "$RES/Images/$PRODUCT.png" >/dev/null
+  else
+    echo "Merk: plugins/$n/docs/screenshot.png mangler – kortet får et navneskilt i stedet for bilde"
+  fi
 
   plutil -insert "plugins.$i" -dictionary "$MANIFEST"
   plutil -insert "plugins.$i.name" -string "$PRODUCT" "$MANIFEST"

@@ -67,3 +67,11 @@ for n in "${NAMES[@]}"; do
   [ -d "$VST3" ] && cp -R "$VST3" dist/
   echo "Ferdig: $PRODUCT"
 done
+
+# Lag installasjonsfilene på nytt, så nye plugins kommer med automatisk.
+# Hopp over med SBAUDIO_NO_INSTALLER=1.
+if [ -z "${SBAUDIO_NO_INSTALLER:-}" ]; then
+  echo "--- Installasjonsfiler (alle plugins i dist/) ---"
+  scripts/make-installer-app.sh
+  scripts/make-installer.sh
+fi

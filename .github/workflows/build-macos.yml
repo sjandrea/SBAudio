@@ -9,6 +9,9 @@ on:
         required: false
         default: ""
 
+permissions:
+  contents: write  # for å lage releaser ved versjonstag
+
 jobs:
   build:
     runs-on: macos-latest  # macos-14 er faset ut av GitHub
@@ -16,10 +19,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build, sign and validate
         run: scripts/build.sh "${{ github.event.inputs.plugin || '--all' }}"
-      - name: Build installer package
-        run: scripts/make-installer.sh
-      - name: Build installer app (.dmg)
-        run: scripts/make-installer-app.sh
+      # build.sh lager også installasjonsfilene (dmg + pkg) med alle plugins i dist/.
+      # Ved en versjonstag (f.eks. 1.2.0) får de tagens versjonsnummer.
+      - name: Installer files with tag version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          rm -f dist/*.dmg dist/*.pkg
+          scripts/make-installer-app.sh "${GITHUB_REF_NAME#v}"
+          scripts/make-installer.sh "${GITHUB_REF_NAME#v}"
       - uses: actions/upload-artifact@v4
         with:
           name: SBAudio-macOS
@@ -35,3 +42,13 @@ jobs:
         with:
           name: SBAudio-Installer-App
           path: dist/*.dmg
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/*.dmg --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/*.dmg --title "Ver ${GITHUB_REF_NAME#v}" --generate-notes
+          fi

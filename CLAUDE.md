@@ -18,6 +18,8 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
 - `scripts/make-installer.sh [versjon]` – lager `dist/SBAudio-<versjon>.pkg` av det som ligger i `dist/`.
 - `scripts/make-installer-app.sh [versjon]` – lager `dist/SBAudio-<versjon>.dmg` med en grafisk installasjonsapp
   (`installer/SBAudioInstaller.swift`) som viser hver plugin som kort med bilde og beskrivelse.
+  Nye plugins plukkes opp automatisk (alle `plugins/*` med bygg i `dist/`); `build.sh` lager dmg + pkg på nytt
+  etter hvert bygg. En pushet versjonstag (`git tag 1.2.0 && git push origin 1.2.0`) gir en GitHub-release med dmg.
 
 ## Faste regler
 
