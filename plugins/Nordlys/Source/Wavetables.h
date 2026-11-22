@@ -224,7 +224,12 @@ namespace nordlys
             std::vector<std::complex<double>> X ((size_t) N);
             for (int h = 1; h < std::min (maxH + 1, N / 2); ++h)
                 if (amp[(size_t) h] != 0.0f)
-                    X[(size_t) h] = std::polar ((double) amp[(size_t) h], juce::MathConstants<double>::twoPi * phase[(size_t) h]);
+                {
+                    // std::polar needs a non-negative radius: a negative amplitude is a half-cycle phase shift
+                    const double a = amp[(size_t) h];
+                    const double ph = juce::MathConstants<double>::twoPi * phase[(size_t) h] + (a < 0.0 ? juce::MathConstants<double>::pi : 0.0);
+                    X[(size_t) h] = std::polar (std::abs (a), ph);
+                }
 
             // in-place iterative radix-2 inverse FFT (no 1/N scaling)
             for (int i = 1, j = 0; i < N; ++i)

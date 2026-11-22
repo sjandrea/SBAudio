@@ -151,18 +151,49 @@ void PresetBar::showMenu()
 
     PopupMenu m;
     m.addSectionHeader ("Fabrikk-presets");
+
+    // Many factory presets: group "Category – Name" into one submenu per category.
+    const String dash (CharPointer_UTF8 (" – "));
+    const bool grouped = presets.getNumFactoryPresets() > 30;
+    StringArray categories;
+    std::vector<PopupMenu> subMenus;
+    std::vector<bool> subTicked;
+
     bool anyUser = false;
     for (int i = 0; i < (int) all.size(); ++i)
     {
         const auto& e = all[(size_t) i];
+        const bool ticked = e.name == cur && e.factory == curFactory;
+        if (e.factory && grouped && e.name.contains (dash))
+        {
+            const auto cat = e.name.upToFirstOccurrenceOf (dash, false, false);
+            int idx = categories.indexOf (cat);
+            if (idx < 0)
+            {
+                idx = categories.size();
+                categories.add (cat);
+                subMenus.emplace_back();
+                subTicked.push_back (false);
+            }
+            subMenus[(size_t) idx].addItem (i + 1, e.name.fromFirstOccurrenceOf (dash, false, false), true, ticked);
+            subTicked[(size_t) idx] = subTicked[(size_t) idx] || ticked;
+            continue;
+        }
+        if (grouped && e.factory) { m.addItem (i + 1, e.name, true, ticked); continue; }
+
         if (! e.factory && ! anyUser)
         {
+            for (size_t c = 0; c < subMenus.size(); ++c)
+                m.addSubMenu (categories[(int) c], subMenus[c], true, nullptr, subTicked[c]);
+            subMenus.clear();
             m.addSeparator();
             m.addSectionHeader ("Mine presets");
             anyUser = true;
         }
-        m.addItem (i + 1, e.name, true, e.name == cur && e.factory == curFactory);
+        m.addItem (i + 1, e.name, true, ticked);
     }
+    for (size_t c = 0; c < subMenus.size(); ++c)
+        m.addSubMenu (categories[(int) c], subMenus[c], true, nullptr, subTicked[c]);
     if (! anyUser)
     {
         m.addSeparator();

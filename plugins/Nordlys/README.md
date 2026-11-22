@@ -64,16 +64,25 @@ Vinduet kan skaleres fra hjørnet nede til høyre. Klaviaturet nederst kan spill
 
 ## Presets
 
-Velg i menyen øverst (eller bla med `<` `>`). Fabrikk-presets vises også i Logics egen preset-meny.
+Velg i menyen øverst (eller bla med `<` `>`). Menyen er delt i undermenyer etter kategori.
+Fabrikk-presetene vises også i Logics egen preset-meny. Totalt 90 presets:
 
-**Pads:** Nordlys · Varm analog · Glassmorgen · Kor i katedral · Dyp drone
-**Teksturer:** Granulær vind · Skimrende stjerner · Digitalt hav · Atmosfære – Fjern tone
-**Keys:** Elektrisk piano · Glassklokker · Orgel · Strings – Ensemble · Pluck – Harpe i tåke
-**Bass:** Sub og knurr · Wobble
-**Lead:** Nordlys-lead · Synkron kvadrat
-**Arp:** Krystallpuls · Analog sekvens
+| Kategori | Presets |
+|---|---|
+| **Pad** (15) | Nordlys · Varm analog · Glassmorgen · Kor i katedral · Dyp drone · Vinterlys · Polarnatt · Sølvstrenger · Myk 80-talls · Pulserende · Fjellvann · Bølgende hav · Glødende kor · Lys og luft · Tidevann |
+| **Tekstur** (11) | Granulær vind · Skimrende stjerner · Digitalt hav · Isflak · Regn på taket · Maskinrom · Hvisken · Krystallgrotte · Fjern radio · Stjernestøv · Puls i mørket |
+| **Atmosfære** (7) | Fjern tone · Nordlysdans · Dyp skog · Kosmisk drone · Sakral · Uro · Morgendis |
+| **Keys** (10) | Elektrisk piano · Glassklokker · Orgel · Vintage EP · Myk klokke-EP · Celesta · Vibrafon · Kirkeorgel · Rock-orgel · Pianopad |
+| **Strings** (4) | Ensemble · Langsomme · Pizzicato · Høye fioliner |
+| **Brass** (3) | Synth-brass · Myke horn · Stab |
+| **Synth** (3) | Supersaw · Akkord-stab · Retro-poly |
+| **Pluck** (6) | Harpe i tåke · Glass-pluck · Kalimba · Marimba · Analog pluck · Digital klokke |
+| **Bass** (9) | Sub og knurr · Wobble · Fet analog · Sub sinus · FM-bass · Pluck-bass · Reese · Acid · Mørk drone-bass |
+| **Lead** (8) | Nordlys-lead · Synkron kvadrat · Myk sinus · Skrikende sag · Fløyteaktig · Glide-lead · Chiptune · Kor-lead |
+| **Arp** (9) | Krystallpuls · Analog sekvens · Glassregn · Akkordpuls · Trioler i tåke · Rask sekvens · Klokkespill · Mørk bass-sekvens · Drømmende |
+| **FX** (4) | Oppsveip · Romvind · Laser · Sirene |
 
-Prøv **modhjulet** og **Orb** på alle presetene – de fleste er koblet til noe.
+Prøv **modhjulet** og **Orb** på alle presetene – de fleste er koblet til noe (f.eks. vibrato, tremolo, filter eller kornetthet).
 
 **Egne presets:** trykk **LAGRE** og gi et navn. De lagres som filer i
 `~/Library/Audio/Presets/SB Audio/Nordlys/` og kan kopieres mellom maskiner.
