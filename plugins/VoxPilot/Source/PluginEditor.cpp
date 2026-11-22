@@ -609,14 +609,8 @@ void VoxPilotEditor::paint (Graphics& g)
         g.setColour (vpcol::gain);
         g.drawLine (x0, cy - 15.0f, x0 + 34.0f, cy - 15.0f, 1.5f);
 
-        g.setFont (uiFont (24.0f, true));
-        g.setColour (vpcol::text);
-        g.drawText ("VOX", 66, 12, 60, 26, Justification::centredLeft);
-        g.setColour (vpcol::accent);
-        g.drawText ("PILOT", 116, 12, 80, 26, Justification::centredLeft);
-        g.setFont (uiFont (10.0f));
-        g.setColour (vpcol::textDim);
-        g.drawText ("AUTOMATIC VOCAL LEVEL RIDER", 67, 37, 200, 14, Justification::centredLeft);
+        sbaudio::drawBrandTitle (g, { 66.0f, 0.0f, 222.0f, (float) kHeader }, "VoxPilot", "VOCAL RIDER",
+                                 vpcol::accent, vpcol::textDim);
     }
 
     // status LEDs

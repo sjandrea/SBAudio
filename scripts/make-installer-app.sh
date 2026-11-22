@@ -1,10 +1,10 @@
 #!/bin/bash
-# Lager en grafisk installasjonsapp («SB Audio Installer.app») i en .dmg.
+# Lager en grafisk installasjonsapp («SLOWHAND Installer.app») i en .dmg.
 # Appen viser alle plugins som kort med bilde og kort beskrivelse, og brukeren
 # krysser av for hvilke som skal installeres (og om AU og/eller VST3).
 # Kjør scripts/build.sh --all først.
 #
-#   scripts/make-installer-app.sh             # -> dist/SBAudio-<versjon>.dmg
+#   scripts/make-installer-app.sh             # -> dist/SLOWHAND-<versjon>.dmg
 #   scripts/make-installer-app.sh 1.2.0       # egen versjon
 #
 # Per plugin brukes:
@@ -30,11 +30,11 @@ for d in plugins/*/; do
 done
 [ ${#PLUGINS[@]} -gt 0 ] || { echo "Ingen plugins i dist/. Kjør scripts/build.sh --all først."; exit 1; }
 
-VERSION="${1:-$(sed -n 's/^project([^ ]* VERSION \([0-9.]*\)).*/\1/p' "plugins/${PLUGINS[0]}/CMakeLists.txt")}"
+VERSION="${1:-$(cat VERSION 2>/dev/null)}"   # installasjonsversjon, se scripts/release.sh
 VERSION="${VERSION:-1.0.0}"
 
 WORK="build/installer-app"
-APP="$WORK/dmg/SB Audio Installer.app"
+APP="$WORK/dmg/SLOWHAND Installer.app"
 RES="$APP/Contents/Resources"
 rm -rf "$WORK"
 mkdir -p "$APP/Contents/MacOS" "$RES/Images" "$RES/Plugins"
@@ -61,9 +61,9 @@ for n in "${PLUGINS[@]}"; do
     summary=$(echo "$summary" | awk '{ out=""; n=split($0, s, /\. /);
       for (k=1; k<=n; k++) { t = s[k] (k<n ? ". " : ""); if (length(out)>0 && length(out t)>300) break; out = out t }
       sub(/ +$/, "", out); print out }')
-    [ -n "$summary" ] || summary="$PRODUCT fra SB Audio."
+    [ -n "$summary" ] || summary="$PRODUCT fra SLOWHAND."
   fi
-  [ -n "$tagline" ] || tagline="SB Audio-plugin"
+  [ -n "$tagline" ] || tagline="SLOWHAND-plugin"
   hasAU=false; hasVST3=false
   [ -d "dist/$PRODUCT.component" ] && { hasAU=true; ditto --norsrc --noextattr "dist/$PRODUCT.component" "$RES/Plugins/$PRODUCT.component"; }
   [ -d "dist/$PRODUCT.vst3" ] && { hasVST3=true; ditto --norsrc --noextattr "dist/$PRODUCT.vst3" "$RES/Plugins/$PRODUCT.vst3"; }
@@ -100,8 +100,8 @@ cat > "$APP/Contents/Info.plist" <<EOF
 <plist version="1.0"><dict>
   <key>CFBundleExecutable</key><string>SBAudioInstaller</string>
   <key>CFBundleIdentifier</key><string>com.sbaudio.installer</string>
-  <key>CFBundleName</key><string>SB Audio Installer</string>
-  <key>CFBundleDisplayName</key><string>SB Audio Installer</string>
+  <key>CFBundleName</key><string>SLOWHAND Installer</string>
+  <key>CFBundleDisplayName</key><string>SLOWHAND Installer</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundleVersion</key><string>$VERSION</string>
@@ -115,7 +115,7 @@ EOF
 codesign --force --options runtime -s "${SBAUDIO_APP_IDENTITY:--}" "$APP"
 
 # --- DMG ---------------------------------------------------------------------
-OUT="dist/SBAudio-$VERSION.dmg"
+OUT="dist/SLOWHAND-$VERSION.dmg"
 rm -f "$OUT"
-hdiutil create -volname "SB Audio $VERSION" -srcfolder "$WORK/dmg" -ov -format UDZO "$OUT" >/dev/null
+hdiutil create -volname "SLOWHAND $VERSION" -srcfolder "$WORK/dmg" -ov -format UDZO "$OUT" >/dev/null
 echo "Laget $OUT (${PLUGINS[*]})"

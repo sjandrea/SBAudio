@@ -1,4 +1,4 @@
-# SB Audio
+# SLOWHAND
 
 Audio Unit- og VST3-plugins for Logic Pro.
 
@@ -30,7 +30,7 @@ Start Logic på nytt etterpå.
 ### Grafisk installasjonsprogram
 
 ```bash
-scripts/build.sh --all             # bygger alt og lager dist/SBAudio-<versjon>.dmg og .pkg
+scripts/build.sh --all             # bygger alt og lager dist/SLOWHAND-<versjon>.dmg og .pkg
 scripts/make-installer-app.sh      # bare diskbildet, av det som ligger i dist/
 ```
 
@@ -38,15 +38,17 @@ scripts/make-installer-app.sh      # bare diskbildet, av det som ligger i dist/
 installasjonsfilene, og `scripts/build.sh` lager dem på nytt etter hvert bygg (`SBAUDIO_NO_INSTALLER=1` hopper over).
 Mangler `docs/installer.txt`, brukes starten av README-en. Mangler `docs/screenshot.png`, får kortet et navneskilt.
 
-**Release:** push en versjonstag, så bygger GitHub alt og legger diskbildet ut som release:
+**Versjoner og release:** installasjonsfilen har eget versjonsnummer i `VERSION` (1.x.0). Hver gang den endres,
+lager du en ny versjon. Skriptet øker x, committer, tagger og pusher, og GitHub bygger alt og legger diskbildet ut som
+release:
 
 ```bash
-git tag 1.2.0 && git push origin 1.2.0
+scripts/release.sh        # f.eks. 1.3.0 -> 1.4.0
 ```
 
-![SB Audio Installer](installer/screenshot.jpg)
+![SLOWHAND Installer](installer/screenshot.jpg)
 
-Diskbildet inneholder **SB Audio Installer.app**. Appen viser alle plugins som kort med et bilde og en kort
+Diskbildet inneholder **SLOWHAND Installer.app**. Appen viser alle plugins som kort med et bilde og en kort
 beskrivelse. Klikk på et kort for å velge det bort eller inn, velg AU og/eller VST3 nederst og trykk **Installer**.
 Plugins som allerede er installert, får merket *INSTALLERT*. Appen ber om administratorpassord og installerer i
 `/Library/Audio/Plug-Ins`. Den kan også fjerne gamle kopier i `~/Library/Audio/Plug-Ins` fra `scripts/build.sh`.
@@ -61,7 +63,7 @@ sikkerhet › Åpne likevel**. Med en Developer ID: `SBAUDIO_APP_IDENTITY="Devel
 
 ```bash
 scripts/build.sh --all
-scripts/make-installer.sh          # -> dist/SBAudio-<versjon>.pkg
+scripts/make-installer.sh          # -> dist/SLOWHAND-<versjon>.pkg
 ```
 
 Pakken installerer for alle brukere: AU i `/Library/Audio/Plug-Ins/Components`, VST3 i
@@ -79,7 +81,7 @@ ikke finner to versjoner.
 ### GitHub
 
 Workflowen `.github/workflows/build-macos.yml` bygger og validerer alle plugins ved hver push og legger dem ved
-som nedlastbare artefakter: `SBAudio-Installer-App` (diskbilde med installasjonsappen), `SBAudio-Installer` (pakken) og `SBAudio-macOS` (løse plugins). For løse plugins, etter nedlasting: `xattr -dr com.apple.quarantine <Plugin>.component` før du kopierer
+som nedlastbare artefakter: `SLOWHAND-Installer-App` (diskbilde med installasjonsappen), `SLOWHAND-Installer` (pakken) og `SLOWHAND-plugins` (løse plugins). For løse plugins, etter nedlasting: `xattr -dr com.apple.quarantine <Plugin>.component` før du kopierer
 den til `~/Library/Audio/Plug-Ins/Components/`.
 
 JUCE er lisensiert under AGPLv3 / JUCE-lisens (gratis for personlig bruk under omsetningsgrensen).

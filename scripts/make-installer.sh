@@ -2,7 +2,7 @@
 # Lager en macOS-installasjonspakke (.pkg) med alle plugins som ligger i dist/.
 # Kjør scripts/build.sh --all først.
 #
-#   scripts/make-installer.sh                 # -> dist/SBAudio-<versjon>.pkg
+#   scripts/make-installer.sh                 # -> dist/SLOWHAND-<versjon>.pkg
 #   scripts/make-installer.sh 1.2.0           # egen versjon
 #
 # Pakken installerer AU i /Library/Audio/Plug-Ins/Components og VST3 i
@@ -26,7 +26,7 @@ for d in plugins/*/; do
 done
 [ ${#PLUGINS[@]} -gt 0 ] || { echo "Ingen plugins i dist/. Kjør scripts/build.sh --all først."; exit 1; }
 
-VERSION="${1:-$(sed -n 's/^project([^ ]* VERSION \([0-9.]*\)).*/\1/p' "plugins/${PLUGINS[0]}/CMakeLists.txt")}"
+VERSION="${1:-$(cat VERSION 2>/dev/null)}"   # installasjonsversjon, se scripts/release.sh
 VERSION="${VERSION:-1.0.0}"
 
 WORK="build/installer"
@@ -84,7 +84,7 @@ done
 LIST=$(printf '<li>%s</li>' "${PLUGINS[@]}")
 cat > "$WORK/resources/welcome.html" <<EOF
 <html><body style="font-family:-apple-system,sans-serif;font-size:13px">
-<h2>SB Audio $VERSION</h2>
+<h2>SLOWHAND $VERSION</h2>
 <p>Denne pakken installerer:</p><ul>$LIST</ul>
 <p>Audio Unit-versjonene legges i <code>/Library/Audio/Plug-Ins/Components</code>,
 VST3 i <code>/Library/Audio/Plug-Ins/VST3</code>. På neste side velger du hvilke plugins
@@ -96,7 +96,7 @@ EOF
 cat > "$WORK/resources/conclusion.html" <<EOF
 <html><body style="font-family:-apple-system,sans-serif;font-size:13px">
 <h2>Ferdig</h2>
-<p>Start Logic Pro på nytt. Pluginene ligger under <b>Audio Units › SB Audio</b>.</p>
+<p>Start Logic Pro på nytt. Pluginene ligger under <b>Audio Units › SLOWHAND</b>.</p>
 <p>Hvis du tidligere har installert pluginene med <code>scripts/build.sh</code>, ligger det også
 kopier i <code>~/Library/Audio/Plug-Ins</code>. Slett dem der så Logic ikke ser to versjoner.</p>
 </body></html>
@@ -105,7 +105,7 @@ EOF
 cat > "$WORK/distribution.xml" <<EOF
 <?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="2">
-    <title>SB Audio $VERSION</title>
+    <title>SLOWHAND $VERSION</title>
     <organization>com.sbaudio</organization>
     <welcome file="welcome.html" mime-type="text/html"/>
     <conclusion file="conclusion.html" mime-type="text/html"/>
@@ -117,7 +117,7 @@ $CHOICES_OUTLINE    </choices-outline>
 $CHOICES$REFS</installer-gui-script>
 EOF
 
-OUT="dist/SBAudio-$VERSION.pkg"
+OUT="dist/SLOWHAND-$VERSION.pkg"
 rm -f "$OUT"
 productbuild --distribution "$WORK/distribution.xml" --package-path "$WORK/pkgs" \
   --resources "$WORK/resources" "$WORK/unsigned.pkg" >/dev/null

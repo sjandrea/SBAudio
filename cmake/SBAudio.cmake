@@ -1,6 +1,6 @@
 # Shared settings for all SB Audio plugins.
 
-set(SBAUDIO_COMPANY      "SB Audio")
+set(SBAUDIO_COMPANY      "SLOWHAND")  # vises i Logic; manufacturer-koden Sbau er uendret
 set(SBAUDIO_MANUFACTURER Sbau)
 
 if(APPLE)

@@ -29,18 +29,18 @@ jobs:
           scripts/make-installer.sh "${GITHUB_REF_NAME#v}"
       - uses: actions/upload-artifact@v4
         with:
-          name: SBAudio-macOS
+          name: SLOWHAND-plugins
           path: |
             dist
             !dist/*.pkg
             !dist/*.dmg
       - uses: actions/upload-artifact@v4
         with:
-          name: SBAudio-Installer
+          name: SLOWHAND-Installer
           path: dist/*.pkg
       - uses: actions/upload-artifact@v4
         with:
-          name: SBAudio-Installer-App
+          name: SLOWHAND-Installer-App
           path: dist/*.dmg
       - name: Publish GitHub release
         if: startsWith(github.ref, 'refs/tags/')
@@ -50,5 +50,5 @@ jobs:
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
             gh release upload "$GITHUB_REF_NAME" dist/*.dmg --clobber
           else
-            gh release create "$GITHUB_REF_NAME" dist/*.dmg --title "Ver ${GITHUB_REF_NAME#v}" --generate-notes
+            gh release create "$GITHUB_REF_NAME" dist/*.dmg --title "SLOWHAND ${GITHUB_REF_NAME#v}" --generate-notes
           fi

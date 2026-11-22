@@ -22,6 +22,7 @@
 
 #include "colours/sbaudio_Colours.h"
 #include "gui/sbaudio_LookAndFeel.h"
+#include "gui/sbaudio_Brand.h"
 #include "gui/sbaudio_Knob.h"
 #include "dsp/sbaudio_AnalyzerRing.h"
 #include "dsp/sbaudio_ReverbEngine.h"

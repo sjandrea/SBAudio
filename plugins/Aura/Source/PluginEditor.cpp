@@ -348,12 +348,7 @@ void AuraEditor::paintContent (Graphics& g)
     g.fillRect (bar);
     g.setColour (col::panelEdge);
     g.fillRect (bar.removeFromBottom (1.0f));
-    g.setFont (uiFont (19.0f, true));
-    g.setColour (auraCol);
-    g.drawText ("Aura", Rectangle<float> (14.0f, 0.0f, 60.0f, 44.0f), Justification::centredLeft);
-    g.setFont (uiFont (9.0f, true));
-    g.setColour (col::textDim);
-    g.drawText (String (CharPointer_UTF8 ("SB AUDIO  ·  REVERB")), Rectangle<float> (66.0f, 0.0f, 160.0f, 44.0f), Justification::centredLeft);
+    sbaudio::drawBrandTitle (g, { 14.0f, 0.0f, 340.0f, 44.0f }, "Aura", "REVERB", auraCol);
 
     auto kp = knobPanel.toFloat();
     g.setColour (col::panel);

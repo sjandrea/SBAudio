@@ -1,4 +1,4 @@
-// SB Audio Installer – a small SwiftUI app that shows every plugin as a card
+// SLOWHAND Installer – a small SwiftUI app that shows every plugin as a card
 // (screenshot + short description) and installs the ones the user picks.
 //
 // Built by scripts/make-installer-app.sh. The app bundle contains:
@@ -290,7 +290,7 @@ struct ContentView: View {
 
     var header: some View {
         HStack(alignment: .firstTextBaseline) {
-            Text("SB AUDIO").font(.system(size: 20, weight: .heavy)).tracking(3).foregroundColor(.sbText)
+            Text("SLOWHAND").font(.system(size: 20, weight: .heavy)).tracking(3).foregroundColor(.sbText)
             Text("Installer \(model.manifest.version)").font(.system(size: 13)).foregroundColor(.sbDim)
             Spacer()
             Text("Velg pluginene du vil installere").font(.system(size: 13)).foregroundColor(.sbDim)
@@ -353,7 +353,7 @@ struct ContentView: View {
             VStack(spacing: 4) {
                 ForEach(list, id: \.self) { Text($0).foregroundColor(.sbText.opacity(0.85)) }
             }
-            Text("Start Logic Pro på nytt. Pluginene ligger under Audio Units › SB Audio.")
+            Text("Start Logic Pro på nytt. Pluginene ligger under Audio Units › SLOWHAND.")
                 .foregroundColor(.sbDim).padding(.top, 6)
             HStack(spacing: 12) {
                 Button("Tilbake") { model.phase = .choosing }
@@ -390,6 +390,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 struct SBAudioInstallerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     var body: some Scene {
-        WindowGroup("SB Audio Installer") { ContentView() }
+        WindowGroup("SLOWHAND Installer") { ContentView() }
     }
 }

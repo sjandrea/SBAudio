@@ -775,13 +775,9 @@ void NordlysEditor::paintContent (Graphics& g)
     g.setColour (col::panelEdge);
     g.fillRect (bar.removeFromBottom (1.0f));
     {
-        const Rectangle<float> logo (16.0f, 0.0f, 120.0f, 48.0f);
-        g.setFont (uiFont (24.0f, true));
-        g.setGradientFill (ColourGradient (auroraGreen, logo.getX(), 0.0f, auroraViolet, logo.getX() + 110.0f, 0.0f, false));
-        g.drawText ("Nordlys", logo, Justification::centredLeft, false);
-        g.setFont (uiFont (9.0f, true));
-        g.setColour (col::textDim);
-        g.drawText (String (CharPointer_UTF8 ("SB AUDIO  ·  SYNTH")), Rectangle<float> (130.0f, 0.0f, 160.0f, 48.0f), Justification::centredLeft);
+        const Rectangle<float> logo (16.0f, 0.0f, 350.0f, 48.0f);
+        sbaudio::drawBrandTitle (g, logo, "Nordlys", "SYNTH",
+                                 FillType (ColourGradient (auroraGreen, logo.getX(), 0.0f, auroraViolet, logo.getX() + 95.0f, 0.0f, false)));
     }
 
     // voices + output meter

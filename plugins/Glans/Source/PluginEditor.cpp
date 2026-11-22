@@ -611,12 +611,7 @@ void GlansEditor::paintContent (Graphics& g)
     g.fillRect (bar);
     g.setColour (col::panelEdge);
     g.fillRect (bar.removeFromBottom (1.0f));
-    g.setFont (uiFont (19.0f, true));
-    g.setColour (gold);
-    g.drawText ("Glans", Rectangle<float> (14.0f, 0.0f, 80.0f, 44.0f), Justification::centredLeft);
-    g.setFont (uiFont (9.0f, true));
-    g.setColour (col::textDim);
-    g.drawText (u8 ("SB AUDIO  \xc2\xb7  MASTERING"), Rectangle<float> (80.0f, 0.0f, 200.0f, 44.0f), Justification::centredLeft);
+    sbaudio::drawBrandTitle (g, { 14.0f, 0.0f, 340.0f, 44.0f }, "Glans", "MASTERING", gold);
 
     // ---- status ----
     auto st = statusRect.toFloat();

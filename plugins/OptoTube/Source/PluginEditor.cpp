@@ -411,12 +411,7 @@ void OptoTubeEditor::paintContent (Graphics& g)
     g.fillRect (bar);
     g.setColour (col::panelEdge);
     g.fillRect (bar.removeFromBottom (1.0f));
-    g.setFont (uiFont (19.0f, true));
-    g.setColour (optoCol);
-    g.drawText ("OptoTube", Rectangle<float> (14.0f, 0.0f, 100.0f, 44.0f), Justification::centredLeft);
-    g.setFont (uiFont (9.0f, true));
-    g.setColour (col::textDim);
-    g.drawText (String (CharPointer_UTF8 ("SB AUDIO  ·  KOMPRESSOR")), Rectangle<float> (112.0f, 0.0f, 180.0f, 44.0f), Justification::centredLeft);
+    sbaudio::drawBrandTitle (g, { 14.0f, 0.0f, 340.0f, 44.0f }, "OptoTube", "COMPRESSOR", optoCol);
 
     // detector HPF label
     g.setFont (uiFont (10.0f, true));

@@ -336,14 +336,7 @@ void PrismEQEditor::paint (Graphics& g)
     g.setColour (col::panelEdge);
     g.fillRect (top.removeFromBottom (1.0f));
 
-    g.setFont (uiFont (18.0f, true));
-    g.setColour (col::text);
-    g.drawText ("Prism", Rectangle<float> (14.0f, 0.0f, 60.0f, 44.0f), Justification::centredLeft);
-    g.setColour (col::accent);
-    g.drawText ("EQ", Rectangle<float> (64.0f, 0.0f, 40.0f, 44.0f), Justification::centredLeft);
-    g.setFont (uiFont (9.0f, true));
-    g.setColour (col::textDim);
-    g.drawText ("SB AUDIO", Rectangle<float> (96.0f, 0.0f, 60.0f, 44.0f), Justification::centredLeft);
+    sbaudio::drawBrandTitle (g, { 14.0f, 0.0f, 138.0f, 44.0f }, "PrismEQ", "DYNAMIC EQ", col::accent);
 
     // output strip background
     auto strip = getLocalBounds().removeFromBottom (150).removeFromRight (240).reduced (8, 8).toFloat();

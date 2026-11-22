@@ -224,7 +224,7 @@ void VuMeter::paint (Graphics& g)
 
     g.setColour (ink.withAlpha (0.85f));
     g.setFont (uiFont (17.0f, true));
-    g.drawText (String (CharPointer_UTF8 ("SB AUDIO \xe2\x80\x93 STUDIO SERIES")),
+    g.drawText (String (CharPointer_UTF8 ("SLOWHAND \xe2\x80\x93 STUDIO SERIES")),
                 Rectangle<float> (18.0f, 244.0f, 320.0f, 20.0f), Justification::centredLeft);
 
     // Needle on a voltage-linear scale, like a real VU
@@ -373,23 +373,13 @@ void VoxHeatEditor::paintContent (Graphics& g)
 {
     const auto full = content.getLocalBounds().toFloat();
 
-    // ---- top bar (shared SB Audio style) ----
+    // ---- top bar (shared SLOWHAND title block) ----
     auto bar = full.withHeight ((float) barH);
     g.setColour (col::panel);
     g.fillRect (bar);
     g.setColour (col::panelEdge);
     g.fillRect (bar.removeFromBottom (1.0f));
-    const auto nameFont = uiFont (18.0f, true);
-    const float voxW = GlyphArrangement::getStringWidth (nameFont, "Vox");
-    const float heatW = GlyphArrangement::getStringWidth (nameFont, "Heat");
-    g.setFont (nameFont);
-    g.setColour (col::text);
-    g.drawText ("Vox", Rectangle<float> (14.0f, 0.0f, voxW + 4.0f, (float) barH), Justification::centredLeft);
-    g.setColour (col::accent);
-    g.drawText ("Heat", Rectangle<float> (14.0f + voxW, 0.0f, heatW + 4.0f, (float) barH), Justification::centredLeft);
-    g.setFont (uiFont (9.0f, true));
-    g.setColour (col::textDim);
-    g.drawText ("SB AUDIO", Rectangle<float> (14.0f + voxW + heatW + 10.0f, 0.0f, 70.0f, (float) barH), Justification::centredLeft);
+    sbaudio::drawBrandTitle (g, { 14.0f, 0.0f, 148.0f, (float) barH }, "VoxHeat", "SATURATION", col::accent);
 
     // ---- faceplate ----
     g.setImageResamplingQuality (Graphics::highResamplingQuality);

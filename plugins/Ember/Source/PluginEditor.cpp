@@ -767,7 +767,7 @@ void EmberEditor::resized()
 
 void EmberEditor::layoutContent()
 {
-    presetBar.setBounds (150, 8, 470, 28);
+    presetBar.setBounds (184, 8, 470, 28);
     presetBar.getOverlay().setBounds (content.getLocalBounds());
     autoGainBtn.setBounds (designW - 8 - 100, 8, 100, 28);
     qualityBox.setBounds (autoGainBtn.getX() - 8 - 130, 8, 130, 28);
@@ -797,12 +797,7 @@ void EmberEditor::paintContent (Graphics& g)
     g.fillRect (bar);
     g.setColour (col::panelEdge);
     g.fillRect (bar.removeFromBottom (1.0f));
-    g.setFont (uiFont (19.0f, true));
-    g.setColour (emberCol);
-    g.drawText ("Ember", Rectangle<float> (14.0f, 0.0f, 70.0f, 44.0f), Justification::centredLeft);
-    g.setFont (uiFont (9.0f, true));
-    g.setColour (col::textDim);
-    g.drawText ("SB AUDIO", Rectangle<float> (78.0f, 0.0f, 70.0f, 44.0f), Justification::centredLeft);
+    sbaudio::drawBrandTitle (g, { 14.0f, 0.0f, 162.0f, 44.0f }, "Ember", "SATURATION", emberCol);
 
     auto ga = globalArea.toFloat();
     g.setColour (col::panel);

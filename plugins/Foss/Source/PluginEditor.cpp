@@ -491,12 +491,7 @@ void FossEditor::paintContent (Graphics& g)
     g.fillRect (bar);
     g.setColour (col::panelEdge);
     g.fillRect (bar.removeFromBottom (1.0f));
-    g.setFont (uiFont (19.0f, true));
-    g.setColour (fossCol);
-    g.drawText ("Foss", Rectangle<float> (14.0f, 0.0f, 60.0f, 44.0f), Justification::centredLeft);
-    g.setFont (uiFont (9.0f, true));
-    g.setColour (col::textDim);
-    g.drawText (utf8 ("SB AUDIO  ·  SMART EQ"), Rectangle<float> (64.0f, 0.0f, 180.0f, 44.0f), Justification::centredLeft);
+    sbaudio::drawBrandTitle (g, { 14.0f, 0.0f, 340.0f, 44.0f }, "Foss", "SMART EQ", fossCol);
 
     auto panel = [&] (Rectangle<int> r, const String& title, const String& sub, Colour accent)
     {
