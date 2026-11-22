@@ -94,7 +94,8 @@ void VoxPilotProcessor::prepareToPlay (double sampleRate, int)
 
     writeInterval   = juce::jmax (1, (int) (sampleRate / 100.0)); // 100 automation points / s max
     historyInterval = juce::jmax (1, (int) (sampleRate / 60.0));  // 60 display frames / s
-    writeCounter = historyCounter = 0;
+    learnInterval   = juce::jmax (1, (int) (sampleRate / 100.0)); // learn frames every 10 ms
+    writeCounter = historyCounter = learnCounter = 0;
     outCoef = (float) std::exp (-1.0 / (0.05 * sampleRate));
     outMs = 0.0f;
     lastWrittenDb = 1000.0f;
@@ -119,6 +120,98 @@ void VoxPilotProcessor::handleAsyncUpdate()
 {
     // tell the host (Logic) about the new plug-in delay so it can compensate
     setLatencySamples (reportedLatency.load());
+
+    if (learnState.load() == 2)
+        finishLearn();
+}
+
+//==============================================================================
+void VoxPilotProcessor::startLearn()
+{
+    learnState.store (0);
+    for (auto& b : learnHist) b.store (0, std::memory_order_relaxed);
+    learnSignalFrames.store (0);
+    learnHadMusic.store (false);
+    learnMessage = {};
+    learnState.store (1);
+}
+
+void VoxPilotProcessor::cancelLearn()
+{
+    learnState.store (0);
+}
+
+bool VoxPilotProcessor::finishLearn()
+{
+    learnState.store (0);
+    learnMessageTime = juce::Time::getMillisecondCounter();
+
+    std::array<double, learnBins> h {};
+    for (int i = 0; i < learnBins; ++i)
+        h[(size_t) i] = (double) learnHist[(size_t) i].load (std::memory_order_relaxed);
+
+    auto binDb = [] (int i) { return -110.0f + 0.5f * (float) i + 0.25f; };
+    auto binOf = [] (float db) { return juce::jlimit (0, learnBins - 1, (int) ((db + 110.0f) * 2.0f)); };
+
+    // level below which `fraction` of the frames in [fromBin, end) lie
+    auto percentile = [&] (int fromBin, double fraction)
+    {
+        double total = 0.0;
+        for (int i = fromBin; i < learnBins; ++i) total += h[(size_t) i];
+        double acc = 0.0;
+        for (int i = fromBin; i < learnBins; ++i)
+            if ((acc += h[(size_t) i]) >= fraction * total)
+                return binDb (i);
+        return binDb (learnBins - 1);
+    };
+    auto count = [&] (int fromBin) { double n = 0.0; for (int i = fromBin; i < learnBins; ++i) n += h[(size_t) i]; return n; };
+
+    const int signalBin = binOf (-70.0f);
+    if (count (signalBin) < 300.0)   // < 3 s with signal
+    {
+        learnMessage = "LEARN: too little vocal - play a vocal passage and try again";
+        return false;
+    }
+
+    // noise / breath floor: the quietest 10 % of the frames with any signal at all
+    const float floorDb = percentile (binOf (-100.0f), 0.10);
+
+    // voiced frames: clearly above that floor
+    const int voicedBin = binOf (juce::jmax (floorDb + 10.0f, -65.0f));
+    if (count (voicedBin) < 200.0)
+    {
+        learnMessage = "LEARN: could not separate the vocal from the noise floor";
+        return false;
+    }
+    const float p10 = percentile (voicedBin, 0.10);
+    const float med = percentile (voicedBin, 0.50);
+    const float p90 = percentile (voicedBin, 0.90);
+
+    // Target = the vocal's typical level: the rider evens out phrases around it without changing the
+    // overall loudness. Detect sits between the noise floor and the quietest phrases.
+    const float target = juce::jlimit (-40.0f, 0.0f, std::round (med * 2.0f) / 2.0f);
+    const float detect = juce::jlimit (-70.0f, -20.0f, std::round (juce::jmin (p10 - 4.0f, juce::jmax (floorDb + 6.0f, p10 - 12.0f))));
+    const float boost  = juce::jlimit (3.0f, gainLimitDb, std::ceil (med - p10) + 1.0f);
+    const float cut    = juce::jlimit (3.0f, gainLimitDb, std::ceil (p90 - med) + 1.0f);
+    // a high floor means bleed or room noise between phrases
+    const float bleed  = learnHadMusic.load() ? 0.3f
+                                              : juce::jlimit (0.0f, 0.5f, std::round ((floorDb + 60.0f) / 40.0f * 20.0f) / 20.0f);
+
+    auto set = [] (juce::RangedAudioParameter* p, float v)
+    {
+        p->beginChangeGesture();
+        p->setValueNotifyingHost (p->convertTo0to1 (v));
+        p->endChangeGesture();
+    };
+    set (pTarget, target);
+    set (pDetect, detect);
+    set (pRangeLow, -cut);
+    set (pRangeHigh, boost);
+    set (pBleed, bleed);
+
+    learnMessage = "LEARNED: target " + juce::String (target, 1) + " dB  -  detect " + juce::String (detect, 0)
+                 + " dB  -  range -" + juce::String (cut, 0) + " / +" + juce::String (boost, 0) + " dB";
+    return true;
 }
 
 void VoxPilotProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
@@ -191,6 +284,10 @@ void VoxPilotProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     const bool useDelay = lookaheadSamples > 0 && delayCh == numCh;
     const float* const* scChans = hasMusic ? sc.getArrayOfReadPointers() : nullptr;
 
+    bool learning = learnState.load() == 1;
+    if (learning && hasMusic)
+        learnHadMusic.store (true, std::memory_order_relaxed);
+
     for (int i = 0; i < numSamples; ++i)
     {
         float vocal = 0.0f;
@@ -205,6 +302,19 @@ void VoxPilotProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
         }
 
         const float computed = engine.processSample (vocal, music, hasMusic);
+
+        if (learning && ++learnCounter >= learnInterval)
+        {
+            learnCounter = 0;
+            const float db = engine.getShortVocalDb();
+            learnHist[(size_t) juce::jlimit (0, learnBins - 1, (int) ((db + 110.0f) * 2.0f))].fetch_add (1, std::memory_order_relaxed);
+            if (db > -55.0f && learnSignalFrames.fetch_add (1) + 1 >= learnFramesNeeded)
+            {
+                learning = false;
+                learnState.store (2);
+                triggerAsyncUpdate();
+            }
+        }
 
         if (mode == AutoMode::read)
             appliedGainDb = readTarget + (appliedGainDb - readTarget) * readSmoothCoef;

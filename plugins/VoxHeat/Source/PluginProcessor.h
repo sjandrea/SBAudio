@@ -104,6 +104,7 @@ public:
     std::unique_ptr<sbaudio::PresetManager> presets;
 
     // Metering (read by the editor)
+    std::atomic<float> inRmsDb { -100.0f };    // after Input gain (what drives the saturator)
     std::atomic<float> outRmsDb { -100.0f };
     std::atomic<float> heat { 0.0f };
 
@@ -143,7 +144,7 @@ private:
     std::atomic<float>* pDens;   std::atomic<float>* pTone;   std::atomic<float>* pMix;
     std::atomic<float>* pOutput; std::atomic<float>* pAuto;
 
-    float meterAcc = 0.0f; int meterCount = 0;
+    float meterAcc = 0.0f, inMeterAcc = 0.0f; int meterCount = 0;
     double distAcc = 0.0, linAcc = 0.0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VoxHeatProcessor)

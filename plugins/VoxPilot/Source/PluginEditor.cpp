@@ -517,6 +517,18 @@ VoxPilotEditor::VoxPilotEditor (VoxPilotProcessor& p)
         b.setTooltip ("Lookahead: the detector looks ahead so the gain is already right when a phrase starts. "
                       "Adds this much latency (Logic compensates automatically). Use OFF for live/recording.");
     }
+    learnBtn.setClickingTogglesState (false);
+    learnBtn.setColour (TextButton::buttonOnColourId, vpcol::gain);
+    learnBtn.setTooltip ("Learn: play a vocal passage (or the whole song). VoxPilot listens for 15 s of vocal - "
+                         "or until you click again - and sets Target, Vocal Detect, Range and Bleed Guard as a starting point.");
+    learnBtn.onClick = [this]
+    {
+        if (proc.isLearning()) proc.finishLearn();
+        else                   proc.startLearn();
+        timerCallback();
+    };
+    addAndMakeVisible (learnBtn);
+
     writeBtn.setTooltip ("Writes the rider moves to the 'Rider Gain' parameter. Put the track's automation in Latch or Touch in Logic.");
     readBtn.setTooltip ("Plays back the 'Rider Gain' automation (or lets you draw it by hand on the fader).");
 
@@ -632,6 +644,13 @@ void VoxPilotEditor::paint (Graphics& g)
     // panels
     drawPanel (g, { 14, kHeader + 12, 236, kH - kHeader - 26 }, "LEVEL");
     drawPanel (g, { 262, kHeader + 12, kW - 262 - 310, kH - kHeader - 26 }, "RIDE HISTORY");
+    if (learnStatus.isNotEmpty())
+    {
+        g.setFont (uiFont (10.5f, true));
+        g.setColour (proc.isLearning() ? vpcol::gain : vpcol::text);
+        g.drawText (learnStatus, Rectangle<int> (262, kHeader + 12, kW - 262 - 310, 24).withTrimmedRight (12),
+                    Justification::centredRight);
+    }
     drawPanel (g, { kW - 298, kHeader + 12, 284, kH - kHeader - 26 }, "GAIN");
 }
 
@@ -651,6 +670,7 @@ void VoxPilotEditor::resized()
 
     // left panel
     const int lx = 14, ly = kHeader + 12;
+    learnBtn.setBounds (lx + 236 - 8 - 84, ly + 3, 84, 20);
     targetLabel.setBounds (lx, ly + 26, 236, 16);
     targetKnob.setBounds (lx + 38, ly + 44, 160, 172);
 
@@ -706,6 +726,26 @@ void VoxPilotEditor::timerCallback()
 
     outMeter.setLevel (proc.meterOutDb.load());
     inMeter.setLevel (proc.meterVocalDb.load());
+
+    // learn status
+    String status;
+    if (proc.isLearning())
+    {
+        status = "LISTENING...  " + String (roundToInt (proc.getLearnProgress() * 100.0f)) + " %   (click LEARN to finish)";
+        learnBtn.setButtonText ("LEARNING");
+    }
+    else
+    {
+        learnBtn.setButtonText ("LEARN");
+        if (proc.learnMessage.isNotEmpty() && Time::getMillisecondCounter() - proc.learnMessageTime < 8000)
+            status = proc.learnMessage;
+    }
+    learnBtn.setToggleState (proc.isLearning(), dontSendNotification);
+    if (status != learnStatus)
+    {
+        learnStatus = status;
+        repaint (262, kHeader + 12, kW - 262 - 310, 24);
+    }
 
     const bool ride = proc.meterActive.load();
     const bool sc = proc.sidechainConnected.load();

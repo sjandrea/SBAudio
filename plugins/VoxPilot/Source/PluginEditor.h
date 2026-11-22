@@ -139,10 +139,12 @@ private:
     juce::TextButton fastBtn { "FAST" }, slowBtn { "SLOW" };
     juce::TextButton offBtn { "OFF" }, writeBtn { "WRITE" }, readBtn { "READ" };
     std::array<juce::TextButton, 4> lookaheadBtns;
+    juce::TextButton learnBtn { "LEARN" };
 
     HistoryView history;
     juce::TooltipWindow tooltips { this, 600 };
 
+    juce::String learnStatus;
     bool rideLed = false, scLed = false;
     float scLevel = -100.0f;
 

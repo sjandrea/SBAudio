@@ -222,6 +222,7 @@ public:
 
     float getGainDb() const noexcept               { return gainDb; }
     float getVocalDb() const noexcept              { return vocalDb; }
+    float getShortVocalDb() const noexcept         { return toDb (midMs); }   // 30 ms voice-band level
     float getMusicDb() const noexcept              { return musicDb; }
     float getEffectiveTargetDb() const noexcept    { return effectiveTargetDb; }
     float getEffectiveThresholdDb() const noexcept { return effectiveThresholdDb; }

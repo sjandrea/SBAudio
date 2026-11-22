@@ -1,8 +1,8 @@
 # VoxHeat – vokal-saturator
 
 VoxHeat er en Audio Unit / VST3-saturator laget spesielt for vokal. Fargen er inspirert av to klassiske
-britiske studiokjeder: **transistor-konsollen** (TG) og **rørforsterkeren** (Tube). Utseendet er et 60-talls
-rack-panel i samme stålblå hardware-stil som OptoTube, med stort VU-meter, bakelittknotter og vippebryter.
+britiske studiokjeder: **transistor-konsollen** (TG) og **rørforsterkeren** (Tube). Grensesnittet følger samme
+oppbygging som de andre SLOWHAND-pluginene: valg øverst, grafer og metere i midten og knapper i tre paneler nederst.
 
 ![VoxHeat](docs/screenshot.png)
 
@@ -10,15 +10,18 @@ rack-panel i samme stålblå hardware-stil som OptoTube, med stort VU-meter, bak
 
 | Kontroll | Hva den gjør |
 |---|---|
+| **TG · Konsoll / Tube · Rør** | Karakter. **TG**: transistor/konsoll – framoverlent og tydelig, mest odde overtoner. **TUBE**: rør – rundere, varmere og fyldigere, mest like overtoner. |
+| **Auto Gain** | Holder lydnivået omtrent likt når du endrer Drive, så du hører fargen – ikke bare mer volum. Grønn = på. |
 | **Input** | Nivå inn i metningen (−24 til +24 dB). Mer input = vokalen presses hardere inn i kurven. |
-| **Drive** | Mengden metning. Den store knappen i midten. |
-| **Character** | Vippebryter. **TG**: transistor/konsoll – framoverlent og tydelig, mest odde overtoner. **TUBE**: rør – rundere, varmere og fyldigere, mest like overtoner. Det aktive valget lyser. |
+| **Drive** | Mengden metning. |
 | **Density** | Kompander: komprimerer inn i metningen og ekspanderer etterpå. Svake og sterke stavelser får like mye farge, mens dynamikken beholdes. |
 | **Tone** | Tilt-EQ etter metningen (−6 til +6 dB): mot venstre mørkere og mykere, mot høyre lysere med mer luft. |
 | **Mix** | Blanding av tørt og mettet signal (parallell metning). Fasekorrigert, så ingen kamfiltrering. |
 | **Output** | Utgangsnivå (−24 til +24 dB). |
-| **Auto Gain** | Grønn lampe. Holder lydnivået omtrent likt når du endrer Drive, så du hører fargen – ikke bare mer volum. Klikk på lampen for å slå av/på. |
-| **VU / Heat** | VU-meteret viser utgangsnivået (0 VU = −18 dBFS RMS). **HEAT**-lampen og meterets bakgrunnslys gløder sterkere jo mer metning som legges på. |
+
+**Kurve** viser metningskurven for valgt Drive og karakter, og gløder sterkere jo mer metning som legges på.
+**Historikk** viser de siste 10 sekundene: nivå inn (grått felt), nivå ut (hvit linje) og **Heat** (oransje, hvor mye
+metning, henger fra toppen). Meterne til høyre viser **INN**, **HEAT** og **UT**.
 
 Dobbeltklikk på en knapp setter den tilbake til standardverdien; dobbeltklikk på en verdi for å skrive inn et tall.
 Vinduet kan skaleres fra hjørnet nede til høyre.
@@ -45,9 +48,9 @@ sterkere, juster **Input** først. Med Auto Gain på er nivået ut omtrent som i
 
 ## Bruk i Logic Pro
 
-1. Sett **VoxHeat** som insert på vokalsporet (*Audio Units → SB Audio → VoxHeat*), gjerne etter EQ og
+1. Sett **VoxHeat** som insert på vokalsporet (*Audio Units → SLOWHAND → VoxHeat*), gjerne etter EQ og
    kompressor (f.eks. PrismEQ → OptoTube → VoxHeat).
-2. Start med en preset og juster **Drive** til du hører fargen; HEAT-lampen viser hvor hardt det jobbes.
+2. Start med en preset og juster **Drive** til du hører fargen; HEAT-meteret viser hvor hardt det jobbes.
 3. Bruk **Density** for jevnere farge gjennom frasene, **Tone** for å plassere vokalen (mørkere/lysere).
 4. For parallell metning: skru Drive høyt og **Mix** ned til 30–50 %.
 
@@ -71,9 +74,6 @@ Se rotens `README.md` for krav og detaljer. Hvis Logic ikke viser pluginen:
   Bytte mellom dem krysstones uten klikk. Auto Gain normaliserer mot et nominelt vokalnivå.
 - Kilde: `Source/PluginProcessor.*` (DSP, parametere, metere), `Source/PluginEditor.*` (GUI),
   `Source/FactoryPresets.h` (fabrikk-presets). Preset-håndteringen ligger i `shared/sbaudio_common`.
-- Grafikk: `Assets/` lages av `artwork/make_assets.py` fra `artwork/source.png` (renser bort nål, pekere og
-  verdier og farger panelet i SB Audio-stålblått). Kjør med Python 3 + `numpy` og `opencv-python-headless`:
-  `python artwork/make_assets.py Assets artwork/source.png` fra `plugins/VoxHeat/`.
 
 Abbey Road, EMI og Redd er varemerker for sine respektive eiere. VoxHeat er en egen konstruksjon inspirert av
 hvordan slikt utstyr oppfører seg; den er ikke en kopi eller modellering av noen bestemt maskinvare.

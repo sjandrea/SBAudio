@@ -56,8 +56,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout VoxHeatProcessor::createLayo
     using namespace juce;
     std::vector<std::unique_ptr<RangedAudioParameter>> p;
 
-    auto dB  = AudioParameterFloatAttributes().withLabel ("dB");
-    auto pct = AudioParameterFloatAttributes().withLabel ("%");
+    auto dB  = AudioParameterFloatAttributes().withLabel ("dB")
+                   .withStringFromValueFunction ([] (float v, int) { return String (v, 1) + " dB"; });
+    auto pct = AudioParameterFloatAttributes().withLabel ("%")
+                   .withStringFromValueFunction ([] (float v, int) { return String (roundToInt (v)) + " %"; });
 
     p.push_back (std::make_unique<AudioParameterFloat> (ParameterID { "input", 1 }, "Input",
                     NormalisableRange<float> (-24.0f, 24.0f, 0.1f), 0.0f, dB));
@@ -191,6 +193,7 @@ void VoxHeatProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
     }
 
     // ---- stage 1 (base rate): input gain, low split, sibilance pre-emphasis
+    float inSq = 0.0f;
     for (int c = 0; c < numCh; ++c)
     {
         dryBuf.copyFrom (c, 0, buffer, c, 0, n);
@@ -200,6 +203,7 @@ void VoxHeatProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
         for (int i = 0; i < n; ++i)
         {
             const float x = d[i] * inArr[(size_t) i];
+            inSq += x * x;
             s.lowState += lowCoeff * (x - s.lowState);
             lo[i] = s.lowState;                       // lows bypass the saturator
             d[i] = s.preEmph.process (x - s.lowState);
@@ -296,14 +300,16 @@ void VoxHeatProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
 
     // ---- metering ----------------------------------------------------------
     meterAcc += sumSq / (float) numCh;
+    inMeterAcc += inSq / (float) numCh;
     meterCount += n;
     distAcc += dist; linAcc += lin;
     if (meterCount >= (int) (sr * 0.03))
     {
         outRmsDb.store (juce::Decibels::gainToDecibels (std::sqrt (meterAcc / (float) meterCount), -100.0f));
+        inRmsDb.store (juce::Decibels::gainToDecibels (std::sqrt (inMeterAcc / (float) meterCount), -100.0f));
         const float h = linAcc > 1.0e-9 ? (float) std::sqrt (distAcc / linAcc) : 0.0f;
         heat.store (juce::jlimit (0.0f, 1.0f, h * 3.0f));
-        meterAcc = 0.0f; meterCount = 0; distAcc = linAcc = 0.0;
+        meterAcc = inMeterAcc = 0.0f; meterCount = 0; distAcc = linAcc = 0.0;
     }
 }
 

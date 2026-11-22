@@ -10,6 +10,7 @@ kontinuerlig og justerer gainen mykt opp og ned slik at vokalen ligger jevnt run
 
 | Kontroll | Hva den gjør |
 |---|---|
+| **Learn** | Finner et utgangspunkt for innstillingene. Se *Learn* under. |
 | **Target** | Ønsket vokalnivå (RMS, dBFS). Kan også dras direkte på den hvite stiplede linjen i grafen. |
 | **Vocal Detect** | Terskel for hva som regnes som vokal. Under terskelen *fryser* rideren, så pust, støy og pauser ikke dras opp. Rød stiplet linje i grafen. |
 | **Bleed Guard** | Hever detekteringsterskelen over lekkasje. Med sidechain: relativt til musikknivået (overhør i mikken ignoreres). Uten sidechain: relativt til et adaptivt støygulv. |
@@ -24,10 +25,24 @@ kontinuerlig og justerer gainen mykt opp og ned slik at vokalen ligger jevnt run
 Statuslamper: **RIDING/IDLE** (vokal detektert) og **SIDECHAIN** (lyser når sidechain-signal mottas).
 Grafen viser 10 sekunder historikk: vokal inn (grå), resultat ut (turkis), target, terskel og rider-gain (oransje).
 
+## Learn
+
+1. Trykk **LEARN** (øverst i LEVEL-panelet) og spill av en typisk vokalpassasje – gjerne refreng og vers.
+2. VoxPilot lytter til den har hørt ca. 15 sekunder vokal (fremdriften vises over grafen), eller til du trykker
+   **LEARNING** igjen for å avslutte tidligere.
+3. Ut fra nivåfordelingen settes:
+   - **Target** til vokalens typiske nivå (median), så rideren jevner ut frasene uten å endre totalnivået,
+   - **Vocal Detect** mellom støy/pust-nivået og de svakeste frasene,
+   - **Range** etter hvor mye nivået varierer (hvor langt de sterke frasene ligger over, og de svake under),
+   - **Bleed Guard** etter hvor høyt støygulvet er (eller 30 % hvis sidechain er koblet til).
+
+Resultatet vises over grafen. Det er et utgangspunkt – juster gjerne videre for hånd. Response, Lookahead, Music Follow
+og Output endres ikke. Er det for lite vokal i opptaket, endres ingenting.
+
 ## Bruk i Logic Pro
 
-1. Sett **VoxPilot** som første insert på vokalsporet (*Audio Units → SB Audio → VoxPilot*).
-2. Spill av en vokalpassasje, still **Vocal Detect** like over støy-/pustenivået, og **Target** der vokalen skal ligge.
+1. Sett **VoxPilot** som første insert på vokalsporet (*Audio Units → SLOWHAND → VoxPilot*).
+2. Trykk **LEARN** og spill av en vokalpassasje – eller still selv **Vocal Detect** like over støy-/pustenivået og **Target** der vokalen skal ligge.
 3. Juster **Range** – f.eks. −6/+6 dB for normal bruk, større ved veldig ujevn vokal.
 4. **Sidechain (valgfritt):** Lag en bus med musikken uten vokal (eller send fra instrumentbussen), og velg den i
    *Side Chain*-menyen øverst i plugin-vinduet. Da fungerer **Music Follow** og **Bleed Guard** mot musikken.
@@ -42,7 +57,7 @@ Grafen viser 10 sekunder historikk: vokal inn (grå), resultat ut (turkis), targ
 
 ## Bygge på Mac
 
-VoxPilot ligger i SB Audio-samlingen. Fra rotmappen (`SBAudio/`):
+VoxPilot ligger i SLOWHAND-samlingen. Fra rotmappen (`SBAudio/`):
 
 ```bash
 scripts/build.sh VoxPilot

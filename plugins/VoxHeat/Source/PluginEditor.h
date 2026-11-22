@@ -4,36 +4,65 @@
 #include <sbaudio_common/sbaudio_common.h>
 #include "PluginProcessor.h"
 
-// Photo-based hardware faceplate in the SB Audio steel-blue palette, under the shared SB Audio top bar.
-// Artwork lives in Assets/ (made by artwork/make_assets.py from artwork/source.png).
-// Faceplate image coordinates are 2x the design size.
+// Flat SLOWHAND layout, same structure as OptoTube: character row, displays (curve, history, meters)
+// and three knob panels.
 
-namespace voxheat::ui
+namespace voxheatui
 {
-    class FaceplateLookAndFeel : public sbaudio::LookAndFeel
+    /** Live values shared by the displays. */
+    struct Levels
     {
-    public:
-        FaceplateLookAndFeel();
-        void drawRotarySlider (juce::Graphics&, int x, int y, int w, int h, float pos,
-                               float startAngle, float endAngle, juce::Slider&) override;
-        void drawToggleButton (juce::Graphics&, juce::ToggleButton&, bool highlighted, bool down) override;
-        void drawLabel (juce::Graphics&, juce::Label&) override;
-
-        juce::Image autoOn;
+        float inDb = -100.0f;   // RMS after Input gain
+        float outDb = -100.0f;  // RMS out
+        float heat = 0.0f;      // 0..1, amount of saturation
     };
 
-    /** VU needle, backlight warmth and footer print drawn over the photo's meter face. */
-    class VuMeter : public juce::Component, private juce::Timer
+    /** Row of two buttons for the Character parameter (TG / TUBE). */
+    class CharacterSelector : public juce::Component
     {
     public:
-        explicit VuMeter (VoxHeatProcessor&);
+        explicit CharacterSelector (juce::RangedAudioParameter&);
+        void resized() override;
+
+    private:
+        void setCurrent (int);
+        juce::OwnedArray<juce::TextButton> buttons;
+        juce::ParameterAttachment attachment;
+    };
+
+    /** Saturation transfer curve for the current Drive / Character. */
+    class SaturationCurve : public juce::Component
+    {
+    public:
+        void update (float drive01, float character, float heat);
         void paint (juce::Graphics&) override;
 
     private:
-        void timerCallback() override;
-        VoxHeatProcessor& proc;
-        float heatShown = 0.0f;
-        float vu = -40.0f;
+        float drive = -1.0f, character = -1.0f, heat = -1.0f;
+    };
+
+    /** Scrolling history: input level area, output line, heat hanging from the top. */
+    class History : public juce::Component
+    {
+    public:
+        static constexpr int numPoints = 300; // 10 s at 30 Hz
+        void push (const Levels&);
+        void paint (juce::Graphics&) override;
+
+    private:
+        std::array<Levels, numPoints> data {};
+        int write = 0;
+    };
+
+    /** INN / HEAT / UT bar meters. */
+    class Meters : public juce::Component
+    {
+    public:
+        void setLevels (const Levels&);
+        void paint (juce::Graphics&) override;
+
+    private:
+        Levels shown;
     };
 }
 
@@ -46,8 +75,7 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
-    static constexpr int barH = 44;
-    static constexpr int designW = 796, designH = barH + 494;
+    static constexpr int designW = 900, designH = 540;
 
 private:
     /** Everything is laid out at design size inside this component and scaled as a whole. */
@@ -58,34 +86,31 @@ private:
         VoxHeatEditor& owner;
     };
 
-    struct Knob
-    {
-        juce::Slider slider;
-        juce::Label value;
-        std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> att;
-        juce::Point<float> centre;   // faceplate image coordinates
-        float radius = 0;
-        float valueY = 0;
-    };
-
     void timerCallback() override;
     void paintContent (juce::Graphics&);
     void layoutContent();
-    void setupKnob (Knob&, const char* paramID, juce::Point<float> centre, float radius,
-                    float valueY, const juce::String& tip);
 
     VoxHeatProcessor& proc;
-    voxheat::ui::FaceplateLookAndFeel lnf;
+    sbaudio::LookAndFeel lnf;
     Content content { *this };
-    sbaudio::PresetBar presetBar;
-    voxheat::ui::VuMeter meter;
-    juce::Image faceplate, heatOn;
 
-    Knob input, drive, density, tone, mix, output;
-    juce::ToggleButton charSwitch, autoGain;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> charAtt, autoAtt;
+    sbaudio::PresetBar presetBar;
+    voxheatui::CharacterSelector character;
+    juce::TextButton autoGain { "AUTO GAIN" };
+    voxheatui::SaturationCurve curve;
+    voxheatui::History history;
+    voxheatui::Meters meters;
+
+    sbaudio::Knob input { "INPUT" }, drive { "DRIVE" }, density { "DENSITY" }, tone { "TONE" },
+                  mix { "MIX" }, output { "OUTPUT" };
+
+    std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>> sliderAtts;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> autoAtt;
     juce::TooltipWindow tooltips { this, 700 };
-    float lampShown = 0.0f;
+
+    juce::Rectangle<int> drivePanel, colourPanel, outPanel;
+    voxheatui::Levels last;
+    int framesWithoutAudio = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VoxHeatEditor)
 };

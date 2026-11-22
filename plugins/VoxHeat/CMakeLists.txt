@@ -18,15 +18,9 @@ juce_add_plugin(VoxHeat
     VST3_CATEGORIES             Fx Distortion
     COPY_PLUGIN_AFTER_BUILD     ${SBAUDIO_COPY})
 
-# Faceplate artwork (made from artwork/source.png by artwork/make_assets.py)
-juce_add_binary_data(VoxHeatAssets SOURCES
-    Assets/background.jpg
-    Assets/heat_on.png
-    Assets/auto_on.png)
-
 target_sources(VoxHeat PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp)
 
 sbaudio_configure_plugin(VoxHeat)
-target_link_libraries(VoxHeat PRIVATE VoxHeatAssets juce::juce_dsp)
+target_link_libraries(VoxHeat PRIVATE juce::juce_dsp)

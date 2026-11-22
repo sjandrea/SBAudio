@@ -72,6 +72,15 @@ public:
 
     static constexpr float gainLimitDb = 12.0f;
 
+    // ---- Learn: listens to the vocal and sets Target, Vocal Detect, Range and Bleed Guard ----
+    void startLearn();              // message thread
+    void cancelLearn();             // message thread
+    bool finishLearn();             // message thread; false if there was too little vocal
+    bool isLearning() const         { return learnState.load() != 0; }
+    float getLearnProgress() const  { return juce::jlimit (0.0f, 1.0f, (float) learnSignalFrames.load() / (float) learnFramesNeeded); }
+    juce::String learnMessage;      // result shown by the editor (message thread)
+    juce::uint32 learnMessageTime = 0;
+
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
     void handleAsyncUpdate() override;
@@ -112,6 +121,15 @@ private:
     int historyInterval = 441, historyCounter = 0;
     float historyPeakOut = 0.0f;
     float outMs = 0.0f, outCoef = 0.999f;
+
+    // learn histogram: 10 ms voice-band level in 0.5 dB bins from -110 to 0 dBFS
+    static constexpr int learnBins = 220;
+    static constexpr int learnFramesNeeded = 1500;   // 15 s of vocal
+    std::array<std::atomic<juce::uint32>, learnBins> learnHist {};
+    std::atomic<int> learnState { 0 };               // 0 idle, 1 listening, 2 enough data
+    std::atomic<int> learnSignalFrames { 0 };
+    std::atomic<bool> learnHadMusic { false };
+    int learnInterval = 441, learnCounter = 0;
 
     static constexpr int historySize = 2048;
     juce::AbstractFifo historyFifo { historySize };
