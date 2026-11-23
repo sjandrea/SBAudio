@@ -1,19 +1,19 @@
-# Glans – smart mastering
+# Domina – smart mastering
 
-Glans er en Audio Unit / VST3-plugin for mastering i Logic Pro, med samme arbeidsmåte som LANDRs mastering-plugin.
-Du spiller av låta, og Glans **lytter** på den. Deretter setter den EQ, kompresjon og gain selv, slik at masteren treffer
+Domina er en Audio Unit / VST3-plugin for mastering i Logic Pro, med samme arbeidsmåte som LANDRs mastering-plugin.
+Du spiller av låta, og Domina **lytter** på den. Deretter setter den EQ, kompresjon og gain selv, slik at masteren treffer
 loudness-målet du har valgt. Toppene går aldri over taket. Resultatet former du med noen få musikalske valg:
 **stil** (Varm / Balansert / Åpen), **loudness** (Lav / Middels / Høy) og en håndfull knapper for tone, dynamikk og
 stereo.
 
-![Glans](docs/screenshot.png)
+![Domina](docs/screenshot.png)
 
 ## Kom i gang
 
-1. Sett **Glans** som *siste* insert på stereo-outputen (eller på en bus med hele miksen):
-   *Audio Units → SB Audio → Glans*.
+1. Sett **Domina** som *siste* insert på stereo-outputen (eller på en bus med hele miksen):
+   *Audio Units → SLOWHAND → Domina*.
 2. Spill av den **kraftigste delen** av låta, f.eks. refrenget. Første gang starter analysen av seg selv. Senere
-   trykker du **ANALYSER**. Glans lytter i ca. 8 sekunder og finjusterer deretter i 2 × 3 sekunder. Pauser telles
+   trykker du **ANALYSER**. Domina lytter i ca. 8 sekunder og finjusterer deretter i 2 × 3 sekunder. Pauser telles
    ikke med.
 3. Velg **STIL** og **LOUDNESS-MÅL**. Begge kan endres når som helst uten ny analyse. Gain regnes ut på nytt med en
    gang.
@@ -38,7 +38,7 @@ Analysen lagres i Logic-prosjektet. Presets endrer ikke analysen, så loudness-m
 | Kontroll | Hva den gjør |
 |---|---|
 | **Lav / Mid / Presence / Høy** | Musikalsk EQ: hylle 100 Hz, klokke 900 Hz, klokke 4 kHz og hylle 9 kHz (±6 dB). |
-| **Auto-EQ** | Hvor mye av korreksjonen fra analysen som brukes (lilla stiplet kurve i grafen). Glans sammenligner miksen med en målkurve for ferdig mastret musikk. Kurven er vippet etter stil. Korreksjonen er bevisst forsiktig (maks +4 / −6 dB) og løfter aldri under 35 Hz. |
+| **Auto-EQ** | Hvor mye av korreksjonen fra analysen som brukes (lilla stiplet kurve i grafen). Domina sammenligner miksen med en målkurve for ferdig mastret musikk. Kurven er vippet etter stil. Korreksjonen er bevisst forsiktig (maks +4 / −6 dB) og løfter aldri under 35 Hz. |
 
 ### Dynamikk
 
@@ -70,7 +70,7 @@ Analysen lagres i Logic-prosjektet. Presets endrer ikke analysen, så loudness-m
 Fra rotmappen (`SBAudio/`):
 
 ```bash
-scripts/build.sh Glans
+scripts/build.sh Domina
 ```
 
 Se rotens `README.md` for krav og detaljer. Hvis Logic ikke viser pluginen:

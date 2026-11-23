@@ -1,4 +1,5 @@
 #include "PluginEditor.h"
+#include "BinaryData.h"
 
 using namespace juce;
 namespace col = sbaudio::colours;
@@ -13,7 +14,7 @@ namespace
 
     void drawWell (Graphics& g, Rectangle<float> r)
     {
-        g.setColour (col::well);
+        g.setColour (col::well.withAlpha (0.55f));   // the painting shows through
         g.fillRoundedRectangle (r, 6.0f);
         g.setColour (col::panelEdge);
         g.drawRoundedRectangle (r.reduced (0.5f), 6.0f, 1.0f);
@@ -23,7 +24,7 @@ namespace
     String lufsStr (float v) { return v <= -99.0f ? u8 ("\xe2\x80\x93") : String (v, 1); }
 }
 
-namespace glansui
+namespace dominaui
 {
     //==========================================================================
     SegmentSelector::SegmentSelector (RangedAudioParameter& p, const StringArray& names, std::vector<float> v,
@@ -65,7 +66,7 @@ namespace glansui
     void AnalyseButton::update (int s, float p, bool a, bool w)
     {
         ++pulse;
-        if (s == state && std::abs (p - progress) < 0.002f && a == analysed && w == waiting && s == glans::Idle && a)
+        if (s == state && std::abs (p - progress) < 0.002f && a == analysed && w == waiting && s == domina::Idle && a)
             return;
         state = s; progress = p; analysed = a; waiting = w;
         repaint();
@@ -81,7 +82,7 @@ namespace glansui
     {
         auto r = getLocalBounds().toFloat().reduced (0.5f);
         const bool over = isMouseOver();
-        const bool busy = state != glans::Idle;
+        const bool busy = state != domina::Idle;
         const bool callToAction = ! busy && ! analysed;
 
         g.setColour (callToAction ? gold.withAlpha (over ? 1.0f : 0.9f) : col::panel.brighter (over ? 0.08f : 0.0f));
@@ -98,8 +99,8 @@ namespace glansui
         g.drawRoundedRectangle (r, 6.0f, 1.2f);
 
         String text, sub;
-        if (state == glans::Listening)     { text = waiting ? u8 ("VENTER P\xc3\x85 LYD") : "LYTTER"; sub = u8 ("klikk for \xc3\xa5 avbryte"); }
-        else if (state == glans::Refining) { text = "FINJUSTERER"; sub = u8 ("klikk for \xc3\xa5 avbryte"); }
+        if (state == domina::Listening)     { text = waiting ? u8 ("VENTER P\xc3\x85 LYD") : "LYTTER"; sub = u8 ("klikk for \xc3\xa5 avbryte"); }
+        else if (state == domina::Refining) { text = "FINJUSTERER"; sub = u8 ("klikk for \xc3\xa5 avbryte"); }
         else                               { text = analysed ? u8 ("ANALYSER P\xc3\x85 NYTT") : "ANALYSER"; }
 
         auto tr = r.reduced (12.0f, 6.0f);
@@ -130,7 +131,7 @@ namespace glansui
     }
 
     //==========================================================================
-    Spectrum::Spectrum (GlansProcessor& p) : proc (p) {}
+    Spectrum::Spectrum (DominaProcessor& p) : proc (p) {}
 
     Rectangle<float> Spectrum::plot() const
     {
@@ -214,13 +215,13 @@ namespace glansui
 
         // EQ curve: auto-EQ (from the analysis) + tone
         const double fs = proc.getSampleRateForDisplay();
-        std::array<glans::Coeffs, glans::numEqBands> ac;
-        std::array<glans::Coeffs, glans::numToneBands> tc;
-        for (int i = 0; i < glans::numEqBands; ++i)
-            ac[(size_t) i] = glans::designBand (glans::corrBands[i], fs, proc.shared.corrDb[(size_t) i].load());
+        std::array<domina::Coeffs, domina::numEqBands> ac;
+        std::array<domina::Coeffs, domina::numToneBands> tc;
+        for (int i = 0; i < domina::numEqBands; ++i)
+            ac[(size_t) i] = domina::designBand (domina::corrBands[i], fs, proc.shared.corrDb[(size_t) i].load());
         const char* toneIds[] = { ParamIDs::low, ParamIDs::mid, ParamIDs::presence, ParamIDs::high };
-        for (int i = 0; i < glans::numToneBands; ++i)
-            tc[(size_t) i] = glans::designBand (glans::toneBands[i], fs, proc.apvts.getRawParameterValue (toneIds[i])->load());
+        for (int i = 0; i < domina::numToneBands; ++i)
+            tc[(size_t) i] = domina::designBand (domina::toneBands[i], fs, proc.apvts.getRawParameterValue (toneIds[i])->load());
 
         for (size_t i = 0; i < freqs.size(); ++i)
         {
@@ -444,31 +445,32 @@ namespace glansui
 }
 
 //==============================================================================
-GlansEditor::GlansEditor (GlansProcessor& p)
+DominaEditor::DominaEditor (DominaProcessor& p)
     : AudioProcessorEditor (&p), proc (p), presetBar (*p.presets),
       styleSelector (*p.apvts.getParameter (ParamIDs::style), { "VARM", "BALANSERT", u8 ("\xc3\x85PEN") }, { 0.0f, 1.0f, 2.0f },
                      { u8 ("Fyldig og myk: litt mer bunn, mindre topp, roligere kompresjon og mer metning."),
                        u8 ("N\xc3\xb8ytral balanse som passer de fleste sjangre."),
                        u8 ("Klar og luftig: mer topp og presence, raskere kompresjon og renere metning.") }),
       loudnessSelector (*p.apvts.getParameter (ParamIDs::loudness), { "LAV", "MIDDELS", u8 ("H\xc3\x98Y") },
-                        { glans::loudnessPresets[0], glans::loudnessPresets[1], glans::loudnessPresets[2] },
+                        { domina::loudnessPresets[0], domina::loudnessPresets[1], domina::loudnessPresets[2] },
                         { u8 ("-14 LUFS: dynamisk og str\xc3\xb8mmevennlig (Spotify, Apple Music, YouTube)."),
                           u8 ("-11 LUFS: tett og konkurransedyktig, fortsatt med luft."),
                           u8 ("-8 LUFS: h\xc3\xb8yt og kompakt, for klubb og tunge sjangre. Mer limiting.") }),
       spectrum (p)
 {
     setLookAndFeel (&lnf);
+    background = ImageCache::getFromMemory (BinaryData::background_jpg, BinaryData::background_jpgSize);
     addAndMakeVisible (content);
 
     content.addAndMakeVisible (presetBar);
     presetBar.attachOverlayTo (content);
 
     content.addAndMakeVisible (analyseButton);
-    analyseButton.setTooltip (u8 ("Spill av den kraftigste delen av l\xc3\xa5ta (f.eks. refrenget). Glans lytter i ca. 15 sekunder, "
+    analyseButton.setTooltip (u8 ("Spill av den kraftigste delen av l\xc3\xa5ta (f.eks. refrenget). Domina lytter i ca. 15 sekunder, "
                                   "setter EQ, kompresjon og gain, og treffer loudness-m\xc3\xa5let. Pauser telles ikke med."));
     analyseButton.onClick = [this]
     {
-        if (proc.shared.analysisState.load() == glans::Idle) proc.startAnalysis();
+        if (proc.shared.analysisState.load() == domina::Idle) proc.startAnalysis();
         else proc.cancelAnalysis();
     };
 
@@ -530,17 +532,17 @@ GlansEditor::GlansEditor (GlansProcessor& p)
     startTimerHz (30);
 }
 
-GlansEditor::~GlansEditor()
+DominaEditor::~DominaEditor()
 {
     setLookAndFeel (nullptr);
 }
 
-void GlansEditor::paint (Graphics& g)
+void DominaEditor::paint (Graphics& g)
 {
     g.fillAll (col::bg);
 }
 
-void GlansEditor::resized()
+void DominaEditor::resized()
 {
     const float s = (float) getWidth() / (float) designW;
     content.setBounds (0, 0, designW, designH);
@@ -548,7 +550,7 @@ void GlansEditor::resized()
     layoutContent();
 }
 
-void GlansEditor::layoutContent()
+void DominaEditor::layoutContent()
 {
     presetBar.setBounds (designW - 8 - 470, 8, 470, 28);
     presetBar.getOverlay().setBounds (content.getLocalBounds());
@@ -583,14 +585,14 @@ void GlansEditor::layoutContent()
     knobRow (outRect, { &width, &loudness, &ceiling });
 }
 
-String GlansEditor::statusLine (int line) const
+String DominaEditor::statusLine (int line) const
 {
     const auto& sh = proc.shared;
     const int st = sh.analysisState.load();
-    if (st == glans::Listening)
+    if (st == domina::Listening)
         return line == 0 ? (sh.waitingForAudio.load() ? u8 ("Venter p\xc3\xa5 lyd \xe2\x80\x93 start avspilling") : u8 ("Lytter p\xc3\xa5 l\xc3\xa5ta \xe2\x80\xa6"))
                          : u8 ("Spill av den kraftigste delen, f.eks. refrenget.");
-    if (st == glans::Refining)
+    if (st == domina::Refining)
         return line == 0 ? u8 ("Finjusterer loudness mot m\xc3\xa5let \xe2\x80\xa6") : u8 ("Snart ferdig \xe2\x80\x93 la l\xc3\xa5ta spille videre.");
     if (sh.dataValid.load())
         return line == 0 ? u8 ("Analysert  \xc2\xb7  inn ") + String (sh.dataInLufs.load(), 1) + " LUFS"
@@ -600,21 +602,29 @@ String GlansEditor::statusLine (int line) const
                                                 : u8 ("Spill av refrenget \xe2\x80\x93 analysen starter av seg selv."));
 }
 
-void GlansEditor::paintContent (Graphics& g)
+void DominaEditor::paintContent (Graphics& g)
 {
     const auto full = content.getLocalBounds().toFloat();
     g.fillAll (col::bg);
+    if (background.isValid())
+    {
+        g.drawImage (background, full, RectanglePlacement::centred | RectanglePlacement::fillDestination);
+        g.setColour (col::bg.withAlpha (0.15f));   // keep text and controls readable
+        g.fillRect (full);
+    }
 
     // ---- top bar ----
     auto bar = full.withHeight (44.0f);
-    g.setColour (col::panel);
+    g.setColour (col::panel.withAlpha (0.80f));
     g.fillRect (bar);
     g.setColour (col::panelEdge);
     g.fillRect (bar.removeFromBottom (1.0f));
-    sbaudio::drawBrandTitle (g, { 14.0f, 0.0f, 340.0f, 44.0f }, "Glans", "MASTERING", gold);
+    sbaudio::drawBrandTitle (g, { 14.0f, 0.0f, 340.0f, 44.0f }, "Domina", "MASTERING", gold);
 
     // ---- status ----
     auto st = statusRect.toFloat();
+    g.setColour (col::bg.withAlpha (0.55f));
+    g.fillRoundedRectangle (st.expanded (6.0f, 2.0f).withRight (st.getRight() + 4.0f), 6.0f);
     g.setColour (col::text);
     g.setFont (uiFont (12.0f, true));
     g.drawFittedText (statusLine (0), st.removeFromTop (st.getHeight() * 0.5f).toNearestInt(), Justification::bottomLeft, 1, 0.85f);
@@ -632,7 +642,7 @@ void GlansEditor::paintContent (Graphics& g)
     auto panel = [&] (Rectangle<int> rr, const String& title, const String& note)
     {
         auto r = rr.toFloat();
-        g.setColour (col::panel);
+        g.setColour (col::panel.withAlpha (0.55f));
         g.fillRoundedRectangle (r, 6.0f);
         g.setColour (col::panelEdge);
         g.drawRoundedRectangle (r.reduced (0.5f), 6.0f, 1.0f);
@@ -649,11 +659,11 @@ void GlansEditor::paintContent (Graphics& g)
     panel (outRect, "STEREO  /  UT", "");
 }
 
-void GlansEditor::timerCallback()
+void DominaEditor::timerCallback()
 {
     auto& sh = proc.shared;
 
-    glansui::MeterValues mv;
+    dominaui::MeterValues mv;
     mv.shortTerm  = sh.outShort.load();
     mv.momentary  = sh.outMomentary.load();
     mv.integrated = sh.outIntegrated.load();
@@ -664,7 +674,7 @@ void GlansEditor::timerCallback()
 
     auto held = [] (float fresh, float& h) { if (fresh >= 0.0f) h = jmax (fresh, h - 0.4f); else h = jmax (0.0f, h - 0.4f); return h; };
     mv.limiterGr = held (sh.limiterGrDb.exchange (-1.0f), limHeld);
-    for (int b = 0; b < glans::numCompBands; ++b)
+    for (int b = 0; b < domina::numCompBands; ++b)
         mv.compGr[(size_t) b] = held (sh.compGrDb[(size_t) b].exchange (-1.0f), compHeld[(size_t) b]);
     mv.deessGr = held (sh.deessGrDb.exchange (-1.0f), deessHeld);
     loudnessPanel.setValues (mv);

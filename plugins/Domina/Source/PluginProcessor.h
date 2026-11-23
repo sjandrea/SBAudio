@@ -23,11 +23,11 @@ namespace ParamIDs
     inline constexpr const char* compare     = "compare";
 }
 
-class GlansProcessor : public juce::AudioProcessor
+class DominaProcessor : public juce::AudioProcessor
 {
 public:
-    GlansProcessor();
-    ~GlansProcessor() override = default;
+    DominaProcessor();
+    ~DominaProcessor() override = default;
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override {}
@@ -61,17 +61,17 @@ public:
     void cancelAnalysis() { shared.command.store (2); }
     void resetMeters()    { shared.command.store (3); }
 
-    glans::Settings readSettings() const;
+    domina::Settings readSettings() const;
     double getSampleRateForDisplay() const { const double r = getSampleRate(); return r > 0.0 ? r : 48000.0; }
 
     juce::AudioProcessorValueTreeState apvts;
     std::unique_ptr<sbaudio::PresetManager> presets;
-    glans::SharedState shared;
+    domina::SharedState shared;
 
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
 
-    glans::Engine engine { shared };
+    domina::Engine engine { shared };
 
     std::atomic<float>* pStyle = nullptr;
     std::atomic<float>* pLoudness = nullptr;
@@ -90,5 +90,5 @@ private:
 
     int currentProgram = 0;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GlansProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DominaProcessor)
 };

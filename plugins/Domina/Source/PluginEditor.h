@@ -5,7 +5,7 @@
 #include <sbaudio_common/sbaudio_common.h>
 #include "PluginProcessor.h"
 
-namespace glansui
+namespace dominaui
 {
     /** Row of buttons bound to a parameter; each button sets one value (style, loudness target …). */
     class SegmentSelector : public juce::Component
@@ -34,7 +34,7 @@ namespace glansui
         std::function<void()> onClick;
 
     private:
-        int state = glans::Idle;
+        int state = domina::Idle;
         float progress = 0.0f;
         bool analysed = false, waiting = false;
         int pulse = 0;
@@ -44,7 +44,7 @@ namespace glansui
     class Spectrum : public juce::Component
     {
     public:
-        explicit Spectrum (GlansProcessor&);
+        explicit Spectrum (DominaProcessor&);
         void update();
         void paint (juce::Graphics&) override;
         void resized() override;
@@ -54,7 +54,7 @@ namespace glansui
         float freqToX (float f) const;
         void analyse (const sbaudio::AnalyzerRing&, std::vector<float>& smoothed);
 
-        GlansProcessor& proc;
+        DominaProcessor& proc;
         static constexpr int fftOrder = 12, fftSize = 1 << fftOrder;
         juce::dsp::FFT fft { fftOrder };
         juce::dsp::WindowingFunction<float> window { (size_t) fftSize, juce::dsp::WindowingFunction<float>::hann, false };
@@ -67,7 +67,7 @@ namespace glansui
     {
         float shortTerm = -100.0f, momentary = -100.0f, integrated = -100.0f, truePeak = -100.0f;
         float target = -11.0f, drive = 0.0f, limiterGr = 0.0f, deessGr = 0.0f;
-        std::array<float, glans::numCompBands> compGr {};
+        std::array<float, domina::numCompBands> compGr {};
         bool analysed = false;
     };
 
@@ -88,11 +88,11 @@ namespace glansui
     };
 }
 
-class GlansEditor : public juce::AudioProcessorEditor, private juce::Timer
+class DominaEditor : public juce::AudioProcessorEditor, private juce::Timer
 {
 public:
-    explicit GlansEditor (GlansProcessor&);
-    ~GlansEditor() override;
+    explicit DominaEditor (DominaProcessor&);
+    ~DominaEditor() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
@@ -102,9 +102,9 @@ public:
 private:
     struct Content : public juce::Component
     {
-        explicit Content (GlansEditor& e) : owner (e) {}
+        explicit Content (DominaEditor& e) : owner (e) {}
         void paint (juce::Graphics& g) override { owner.paintContent (g); }
-        GlansEditor& owner;
+        DominaEditor& owner;
     };
 
     void timerCallback() override;
@@ -112,15 +112,15 @@ private:
     void layoutContent();
     juce::String statusLine (int line) const;
 
-    GlansProcessor& proc;
+    DominaProcessor& proc;
     sbaudio::LookAndFeel lnf;
     Content content { *this };
 
     sbaudio::PresetBar presetBar;
-    glansui::AnalyseButton analyseButton;
-    glansui::SegmentSelector styleSelector, loudnessSelector;
-    glansui::Spectrum spectrum;
-    glansui::LoudnessPanel loudnessPanel;
+    dominaui::AnalyseButton analyseButton;
+    dominaui::SegmentSelector styleSelector, loudnessSelector;
+    dominaui::Spectrum spectrum;
+    dominaui::LoudnessPanel loudnessPanel;
     juce::TextButton compareButton { "SAMMENLIGN  (A/B)" }, monoBassButton { "MONO BASS" };
 
     sbaudio::Knob low { "LAV" }, mid { "MID" }, presence { "PRESENCE" }, high { juce::String (juce::CharPointer_UTF8 ("H\xc3\x98Y")) },
@@ -130,14 +130,15 @@ private:
     std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>> sliderAtts;
     std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>> buttonAtts;
     juce::TooltipWindow tooltips { this, 700 };
+    juce::Image background;   // painting behind the whole UI (Assets/background.jpg)
 
     juce::Rectangle<int> toneRect, dynRect, outRect, statusRect;
     int shownState = -1;
     bool shownAnalysed = false, shownWaiting = false;
     float shownInLufs = 0.0f;
     float limHeld = 0.0f;
-    std::array<float, glans::numCompBands> compHeld {};
+    std::array<float, domina::numCompBands> compHeld {};
     float deessHeld = 0.0f;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GlansEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DominaEditor)
 };

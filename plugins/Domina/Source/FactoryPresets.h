@@ -5,7 +5,7 @@
 // Built-in presets. Values are plain parameter values; parameters not listed use their default.
 // Presets never touch the analysis – load one after analysing and the loudness target still holds.
 // Style: 0 = Varm, 1 = Balansert, 2 = Åpen.
-namespace glans
+namespace domina
 {
     inline std::vector<sbaudio::FactoryPreset> factoryPresets()
     {

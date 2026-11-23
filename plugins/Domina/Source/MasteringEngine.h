@@ -8,7 +8,7 @@
 #include <cmath>
 #include <vector>
 
-/*  Glans – one-knob-style mastering chain (in the spirit of LANDR's mastering plugin).
+/*  Domina – one-knob-style mastering chain (in the spirit of LANDR's mastering plugin).
 
     Signal path (base rate unless noted):
       input -> auto-EQ (10 bands, fitted from the analysis against a style target)
@@ -26,7 +26,7 @@
                 The second pass uses the measured slope of the first, since the limiter swallows part of any gain change.
     Everything derived from the analysis (EQ, compressor references, drive) is recomputed whenever a control
     changes, so the style or loudness target can be changed afterwards without analysing again. */
-namespace glans
+namespace domina
 {
     using juce::jlimit;
     using juce::jmax;

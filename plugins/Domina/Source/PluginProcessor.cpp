@@ -15,7 +15,7 @@ namespace
     const Identifier autoStartAttr ("glansAutoStartDone");
 }
 
-AudioProcessorValueTreeState::ParameterLayout GlansProcessor::createLayout()
+AudioProcessorValueTreeState::ParameterLayout DominaProcessor::createLayout()
 {
     using P = AudioParameterFloat;
     using A = AudioParameterFloatAttributes;
@@ -32,9 +32,9 @@ AudioProcessorValueTreeState::ParameterLayout GlansProcessor::createLayout()
                                            A().withLabel ("%").withStringFromValueFunction (pctText)));
     };
 
-    ps.push_back (std::make_unique<AudioParameterChoice> (ParameterID { ParamIDs::style, 1 }, "Style", glans::styleNames, glans::Balanced));
+    ps.push_back (std::make_unique<AudioParameterChoice> (ParameterID { ParamIDs::style, 1 }, "Style", domina::styleNames, domina::Balanced));
     ps.push_back (std::make_unique<P> (ParameterID { ParamIDs::loudness, 1 }, "Loudness",
-                                       NormalisableRange<float> (glans::minTargetLufs, glans::maxTargetLufs, 0.1f), -11.0f,
+                                       NormalisableRange<float> (domina::minTargetLufs, domina::maxTargetLufs, 0.1f), -11.0f,
                                        A().withLabel ("LUFS").withStringFromValueFunction (lufsText)));
     toneParam (ParamIDs::low, "Low");
     toneParam (ParamIDs::mid, "Mid");
@@ -53,11 +53,11 @@ AudioProcessorValueTreeState::ParameterLayout GlansProcessor::createLayout()
     return { ps.begin(), ps.end() };
 }
 
-GlansProcessor::GlansProcessor()
+DominaProcessor::DominaProcessor()
     : AudioProcessor (BusesProperties()
                           .withInput ("Input", AudioChannelSet::stereo(), true)
                           .withOutput ("Output", AudioChannelSet::stereo(), true)),
-      apvts (*this, nullptr, "Glans", createLayout())
+      apvts (*this, nullptr, "Glans", createLayout())   // state type kept from the Glans days (saved projects)
 {
     pStyle       = apvts.getRawParameterValue (ParamIDs::style);
     pLoudness    = apvts.getRawParameterValue (ParamIDs::loudness);
@@ -74,24 +74,24 @@ GlansProcessor::GlansProcessor()
     pCeiling     = apvts.getRawParameterValue (ParamIDs::ceiling);
     pCompare     = apvts.getRawParameterValue (ParamIDs::compare);
 
-    presets = std::make_unique<sbaudio::PresetManager> (apvts, "Glans", ".glanspreset", glans::factoryPresets());
+    presets = std::make_unique<sbaudio::PresetManager> (apvts, "Domina", ".dominapreset", domina::factoryPresets());
 }
 
-bool GlansProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool DominaProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
     const auto in = layouts.getMainInputChannelSet(), out = layouts.getMainOutputChannelSet();
     return in == out && (out == AudioChannelSet::mono() || out == AudioChannelSet::stereo());
 }
 
-void GlansProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void DominaProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     engine.prepare (sampleRate, samplesPerBlock);
     setLatencySamples (engine.getLatency());
 }
 
-glans::Settings GlansProcessor::readSettings() const
+domina::Settings DominaProcessor::readSettings() const
 {
-    glans::Settings s;
+    domina::Settings s;
     s.style       = jlimit (0, 2, (int) pStyle->load());
     s.targetLufs  = pLoudness->load();
     s.tone        = { pLow->load(), pMid->load(), pPresence->load(), pHigh->load() };
@@ -106,7 +106,7 @@ glans::Settings GlansProcessor::readSettings() const
     return s;
 }
 
-void GlansProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer&)
+void DominaProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer&)
 {
     ScopedNoDenormals noDenormals;
     for (int c = getTotalNumInputChannels(); c < getTotalNumOutputChannels(); ++c)
@@ -114,17 +114,17 @@ void GlansProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer&)
     engine.process (buffer, readSettings());
 }
 
-void GlansProcessor::processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer&)
+void DominaProcessor::processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer&)
 {
     ScopedNoDenormals noDenormals;
     engine.processBypassed (buffer);
 }
 
 //==============================================================================
-int GlansProcessor::getNumPrograms()                { return jmax (1, presets->getNumFactoryPresets()); }
-const String GlansProcessor::getProgramName (int i) { return presets->getFactoryPresetName (i); }
+int DominaProcessor::getNumPrograms()                { return jmax (1, presets->getNumFactoryPresets()); }
+const String DominaProcessor::getProgramName (int i) { return presets->getFactoryPresetName (i); }
 
-void GlansProcessor::setCurrentProgram (int i)
+void DominaProcessor::setCurrentProgram (int i)
 {
     if (! isPositiveAndBelow (i, presets->getNumFactoryPresets()))
         return;
@@ -133,7 +133,7 @@ void GlansProcessor::setCurrentProgram (int i)
 }
 
 // The analysis is stored next to the parameters, not in apvts.state, so presets never carry it.
-void GlansProcessor::getStateInformation (MemoryBlock& destData)
+void DominaProcessor::getStateInformation (MemoryBlock& destData)
 {
     if (auto xml = apvts.copyState().createXml())
     {
@@ -143,13 +143,13 @@ void GlansProcessor::getStateInformation (MemoryBlock& destData)
     }
 }
 
-void GlansProcessor::setStateInformation (const void* data, int sizeInBytes)
+void DominaProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     auto xml = getXmlFromBinary (data, sizeInBytes);
     if (xml == nullptr || ! xml->hasTagName (apvts.state.getType()))
         return;
 
-    const auto analysis = glans::AnalysisData::fromString (xml->getStringAttribute (analysisAttr));
+    const auto analysis = domina::AnalysisData::fromString (xml->getStringAttribute (analysisAttr));
     shared.autoStartDone.store (xml->getIntAttribute (autoStartAttr, 0) != 0 || analysis.valid);
     xml->removeAttribute (analysisAttr);
     xml->removeAttribute (autoStartAttr);
@@ -159,6 +159,6 @@ void GlansProcessor::setStateInformation (const void* data, int sizeInBytes)
     shared.loadVersion.fetch_add (1);
 }
 
-AudioProcessorEditor* GlansProcessor::createEditor() { return new GlansEditor (*this); }
+AudioProcessorEditor* DominaProcessor::createEditor() { return new DominaEditor (*this); }
 
-AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new GlansProcessor(); }
+AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new DominaProcessor(); }
