@@ -99,8 +99,18 @@ final class InstallerModel: ObservableObject {
             lines.append("/usr/bin/xattr -dr com.apple.quarantine \(q(dest)) 2>/dev/null || true")
             lines.append("chown -R root:wheel \(q(dest)); chmod -R a+rX \(q(dest))")
         }
+        // Renamed plugins keep their AU code, so an old bundle left behind would shadow the new one.
+        let legacyNames: [String: [String]] = ["Domina": ["Glans"]]
         var installed: [String] = []
         for p in chosen {
+            for old in legacyNames[p.name] ?? [] {
+                for dir in [Paths.systemComponents, Paths.userComponents] {
+                    lines.append("rm -rf \(q(dir.appendingPathComponent("\(old).component").path))")
+                }
+                for dir in [Paths.systemVST3, Paths.userVST3] {
+                    lines.append("rm -rf \(q(dir.appendingPathComponent("\(old).vst3").path))")
+                }
+            }
             var formats: [String] = []
             if installAU && p.hasAU { copy(Paths.bundled(p, ext: "component"), to: Paths.systemComponents); formats.append("AU") }
             if installVST3 && p.hasVST3 { copy(Paths.bundled(p, ext: "vst3"), to: Paths.systemVST3); formats.append("VST3") }
