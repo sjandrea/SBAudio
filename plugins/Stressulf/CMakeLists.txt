@@ -22,5 +22,7 @@ target_sources(Stressulf PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp)
 
+juce_add_binary_data(StressulfAssets SOURCES Assets/background.jpg)
+
 sbaudio_configure_plugin(Stressulf)
-target_link_libraries(Stressulf PRIVATE juce::juce_dsp)
+target_link_libraries(Stressulf PRIVATE juce::juce_dsp StressulfAssets)

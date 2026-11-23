@@ -106,6 +106,7 @@ private:
     std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>> buttonAtts;
     juce::TooltipWindow tooltips { this, 700 };
 
+    juce::Image background;   // painting behind the whole UI (Assets/background.jpg)
     juce::Rectangle<int> dynPanel, colourPanel, outPanel;
     stressulfui::Levels last;
     int framesWithoutAudio = 0;

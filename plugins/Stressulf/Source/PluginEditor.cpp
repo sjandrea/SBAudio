@@ -1,4 +1,5 @@
 #include "PluginEditor.h"
+#include "BinaryData.h"
 
 using namespace juce;
 namespace col = sbaudio::colours;
@@ -11,7 +12,7 @@ namespace
 
     void drawWell (Graphics& g, Rectangle<float> r)
     {
-        g.setColour (col::well);
+        g.setColour (col::well.withAlpha (0.50f));
         g.fillRoundedRectangle (r, 6.0f);
         g.setColour (col::panelEdge);
         g.drawRoundedRectangle (r.reduced (0.5f), 6.0f, 1.0f);
@@ -289,6 +290,7 @@ StressulfEditor::StressulfEditor (StressulfProcessor& p)
       distButtons (*p.apvts.getParameter (ParamIDs::dist), { "CLEAN", "DIST 2", "DIST 3" }, stressCol)
 {
     setLookAndFeel (&lnf);
+    background = ImageCache::getFromMemory (BinaryData::background_jpg, BinaryData::background_jpgSize);
     addAndMakeVisible (content);
 
     content.addAndMakeVisible (presetBar);
@@ -425,9 +427,15 @@ void StressulfEditor::paintContent (Graphics& g)
 {
     const auto full = content.getLocalBounds().toFloat();
     g.fillAll (col::bg);
+    if (background.isValid())
+    {
+        g.drawImage (background, full, RectanglePlacement::centred | RectanglePlacement::fillDestination);
+        g.setColour (col::bg.withAlpha (0.12f));   // keep text and controls readable
+        g.fillRect (full);
+    }
 
     auto bar = full.withHeight (44.0f);
-    g.setColour (col::panel);
+    g.setColour (col::panel.withAlpha (0.80f));
     g.fillRect (bar);
     g.setColour (col::panelEdge);
     g.fillRect (bar.removeFromBottom (1.0f));
@@ -436,7 +444,7 @@ void StressulfEditor::paintContent (Graphics& g)
     auto panel = [&] (Rectangle<int> rr, const String& title, const String& note)
     {
         auto r = rr.toFloat();
-        g.setColour (col::panel);
+        g.setColour (col::panel.withAlpha (0.50f));
         g.fillRoundedRectangle (r, 6.0f);
         g.setColour (col::panelEdge);
         g.drawRoundedRectangle (r.reduced (0.5f), 6.0f, 1.0f);
