@@ -49,6 +49,7 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
 | VoxHeat  | `Vxht`      | aufx    | Vokal-saturator (TG-konsoll + rør, à la Abbey Road Saturator) |
 | Nordlys  | `Nrdl`      | aumu    | Atmosfærisk synth: 4 lag, granulær, Orb, arp (à la Omnisphere) |
 | Glans    | `Glns`      | aufx    | Mastering: analyse, stil, loudness-mål, true-peak-limiter (à la LANDR) |
+| Stressulf | `Strs`     | aufx    | Karakterkompressor med Dist 2/3, Nuke, Opto og Smash (à la Distressor) |
 
 ## Ny plugin
 

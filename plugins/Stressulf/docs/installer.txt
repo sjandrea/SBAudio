@@ -1,0 +1,1 @@
+Karakterkompressor som kan gå fra usynlig utjevning til full knusing. Input driver mot en fast terskel, ratio fra 1:1 til NUKE og OPTO, Dist 2/Dist 3 for rør- eller tapefarge, og SMASH for parallell knusing av trommer og vokal.
