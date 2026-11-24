@@ -14,6 +14,7 @@ Audio Unit- og VST3-plugins for Logic Pro.
 | [Nordlys](plugins/Nordlys/README.md) | Atmosfærisk synth (instrument) med 4 lag, granulær syntese, Orb og arpeggiator (à la Omnisphere) |
 | [Domina](plugins/Domina/README.md) | Smart mastering (à la LANDR): analyse, stil, loudness-mål, multiband-kompresjon og true-peak-limiter |
 | [Stressulf](plugins/Stressulf/README.md) | Karakterkompressor (à la Distressor): fast terskel, ratio 1:1–NUKE og OPTO, Dist 2/3, detektor-HP/band og SMASH |
+| [Dovregubben](plugins/Dovregubben/README.md) | Karakter-delay (à la Valhalla Delay): Tape, HiFi, BBD, Digital, Pitch, Reverse og Ghost, med dobling, ducking og diffusjon |
 
 ## Bygge på Mac
 

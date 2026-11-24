@@ -50,6 +50,7 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
 | Nordlys  | `Nrdl`      | aumu    | Atmosfærisk synth: 4 lag, granulær, Orb, arp (à la Omnisphere) |
 | Domina   | `Glns`      | aufx    | Mastering: analyse, stil, loudness-mål, true-peak-limiter (à la LANDR). Het Glans før – koden er beholdt |
 | Stressulf | `Strs`     | aufx    | Karakterkompressor med Dist 2/3, Nuke, Opto og Smash (à la Distressor) |
+| Dovregubben | `Dovr`   | aufx    | Karakter-delay: Tape, HiFi, BBD, Digital, Pitch, Reverse, Ghost + dobling (à la Valhalla Delay) |
 
 ## Ny plugin
 
