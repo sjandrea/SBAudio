@@ -24,8 +24,10 @@ programavhengig OPTO-modus. Overtoner (Dist 2 / Dist 3) øker med kompresjonen.
 | **Mix** | Parallellkompresjon. Det ukomprimerte signalet er fasekorrigert, så det oppstår ingen kamfiltrering. |
 | **Output** | Utgangsnivå (−24 til +12 dB). Skru ned når du skrur opp Input. |
 
-Grafene viser **kurven** for valgt ratio med dagens nivå som en prikk, og en **historikk** over 10 sekunder med nivå inn
-(grått felt), nivå ut (hvit linje) og demping (rød, henger fra toppen). Meterne viser **INN**, **GR** og **UT**.
+Grensesnittet er et lavt rack-panel i stil med originalen: knappene på rad, ratio og modus som LED-lister
+(klikk på en rad for å velge), og en **GR**-LED-stige fra 1 til 30 dB. Skjermen i midten viser en **historikk** over
+10 sekunder med demping (rød, øverst), nivå inn (grått felt) og nivå ut (hvit linje), med LED-metere for **INN** og **UT** under.
+Med **SMASH** på lyser alle ratio-LED-ene, som på maskinvaren.
 Dobbeltklikk på en knapp setter den tilbake til standardverdien. Vinduet kan skaleres fra hjørnet nede til høyre.
 
 ## Presets

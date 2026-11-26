@@ -13,33 +13,51 @@ namespace stressulfui
         float grDb = 0.0f;      // positive
     };
 
-    /** Row of buttons bound to a choice parameter. */
-    class ChoiceButtons : public juce::Component
+    /** Hardware-style knob: black cap, white pointer, tick scale that lights up to the value. */
+    class FaceplateLnf : public sbaudio::LookAndFeel
     {
     public:
-        ChoiceButtons (juce::RangedAudioParameter&, const juce::StringArray& labels, juce::Colour on);
-        void resized() override;
-        void setTooltips (const juce::StringArray&);
+        void drawRotarySlider (juce::Graphics&, int x, int y, int w, int h, float pos,
+                               float startAngle, float endAngle, juce::Slider&) override;
+    };
+
+    /** Vertical list of LED + label rows bound to a choice parameter (like the ratio LEDs on the hardware). */
+    class LedChoice : public juce::Component, public juce::TooltipClient
+    {
+    public:
+        LedChoice (juce::RangedAudioParameter&, const juce::StringArray& labels, const juce::String& title);
+        void setTooltips (const juce::StringArray& t) { tips = t; }
+        void setAllLit (bool);   // SMASH lights every LED, like the hardware's "all buttons in"
+        void paint (juce::Graphics&) override;
+        void mouseDown (const juce::MouseEvent&) override;
+        juce::String getTooltip() override;
 
     private:
-        void setCurrent (int);
-        juce::OwnedArray<juce::TextButton> buttons;
+        int rowAt (juce::Point<int>) const;
+        juce::Rectangle<float> rowBounds (int) const;
+        juce::StringArray labels, tips;
+        juce::String title;
+        int current = 0;
+        bool allLit = false;
         juce::ParameterAttachment attachment;
     };
 
-    /** Static curve (level into the compressor -> out) with the live level as a dot. */
-    class TransferCurve : public juce::Component
+    /** Single LED + label row bound to a bool parameter. */
+    class LedToggle : public juce::Component, public juce::SettableTooltipClient
     {
     public:
-        void update (int ratio, bool smash, float levelDb);
+        LedToggle (juce::RangedAudioParameter&, const juce::String& label, juce::Colour led);
         void paint (juce::Graphics&) override;
+        void mouseDown (const juce::MouseEvent&) override;
 
     private:
-        int ratio = -1;
-        bool smash = false;
-        float level = -100.0f;
+        juce::String label;
+        juce::Colour ledCol;
+        bool on = false;
+        juce::ParameterAttachment attachment;
     };
 
+    /** Small dark screen with the last 10 s of input, output and gain reduction. */
     class History : public juce::Component
     {
     public:
@@ -52,7 +70,20 @@ namespace stressulfui
         int write = 0;
     };
 
-    class Meters : public juce::Component
+    /** Vertical gain-reduction LED ladder (1 … 30 dB). */
+    class GrLadder : public juce::Component
+    {
+    public:
+        void setGr (float);
+        void paint (juce::Graphics&) override;
+
+    private:
+        float gr = 0.0f, hold = 0.0f;
+        int holdFrames = 0;
+    };
+
+    /** Two horizontal LED rows for input and output level. */
+    class LevelRows : public juce::Component
     {
     public:
         void setLevels (const Levels&);
@@ -60,8 +91,6 @@ namespace stressulfui
 
     private:
         Levels shown;
-        float grHold = 0.0f;
-        int holdFrames = 0;
     };
 }
 
@@ -74,7 +103,7 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
-    static constexpr int designW = 900, designH = 560;
+    static constexpr int designW = 1000, designH = 300;
 
 private:
     struct Content : public juce::Component
@@ -87,30 +116,28 @@ private:
     void timerCallback() override;
     void paintContent (juce::Graphics&);
     void layoutContent();
-    void setupToggle (juce::TextButton&, const char* paramId, const juce::String& tip);
+    void setupToggle (stressulfui::LedToggle&, const juce::String& tip);
 
     StressulfProcessor& proc;
-    sbaudio::LookAndFeel lnf;
+    stressulfui::FaceplateLnf lnf;
     Content content { *this };
 
     sbaudio::PresetBar presetBar;
-    stressulfui::ChoiceButtons ratioButtons, distButtons;
-    juce::TextButton smashBtn { "SMASH" }, detHpBtn { "DET HP" }, bandBtn { "BAND" }, audioHpBtn { "AUDIO HP" }, linkBtn { "LINK" };
-    stressulfui::TransferCurve curve;
+    stressulfui::LedChoice ratioLeds, distLeds;
+    stressulfui::LedToggle smashLed, detHpLed, bandLed, audioHpLed, linkLed;
     stressulfui::History history;
-    stressulfui::Meters meters;
+    stressulfui::GrLadder grLadder;
+    stressulfui::LevelRows levelRows;
 
     sbaudio::Knob input { "INPUT" }, attack { "ATTACK" }, release { "RELEASE" }, mix { "MIX" }, output { "OUTPUT" };
 
     std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>> sliderAtts;
-    std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>> buttonAtts;
     juce::TooltipWindow tooltips { this, 700 };
 
-    juce::Image background;   // painting behind the whole UI (Assets/background.jpg)
-    juce::Rectangle<int> dynPanel, colourPanel, outPanel;
+    juce::Image background;   // painting, very faint behind the faceplate (Assets/background.jpg)
+    juce::Rectangle<int> faceplate, modeArea;
     stressulfui::Levels last;
     int framesWithoutAudio = 0;
-    bool timesFixed = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StressulfEditor)
 };

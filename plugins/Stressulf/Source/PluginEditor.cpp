@@ -8,140 +8,181 @@ using sbaudio::uiFont;
 namespace
 {
     const Colour stressCol  { 0xffff4f6b };   // hot red-pink
-    const Colour stressSoft { 0xffffa3b2 };
+    const Colour ledRed     { 0xffff3b3b };
+    const Colour ledAmber   { 0xffffb03b };
+    const Colour ledGreen   { 0xff52e07a };
+    const Colour plateTop   { 0xff1d1f24 };
+    const Colour plateBot   { 0xff111216 };
+    const Colour silk       { 0xffd8dbe0 };   // white "screen print" on the faceplate
+    const Colour silkDim    { 0xff8a9099 };
 
-    void drawWell (Graphics& g, Rectangle<float> r)
+    String utf8 (const char* s) { return String (CharPointer_UTF8 (s)); }
+
+    void drawLed (Graphics& g, Point<float> c, float d, Colour colour, bool on)
     {
-        g.setColour (col::well.withAlpha (0.50f));
-        g.fillRoundedRectangle (r, 6.0f);
-        g.setColour (col::panelEdge);
-        g.drawRoundedRectangle (r.reduced (0.5f), 6.0f, 1.0f);
+        auto r = Rectangle<float> (d, d).withCentre (c);
+        if (on)
+        {
+            g.setColour (colour.withAlpha (0.28f));
+            g.fillEllipse (r.expanded (d * 0.6f));
+            g.setGradientFill (ColourGradient (colour.brighter (0.6f), r.getCentreX(), r.getY(),
+                                               colour, r.getCentreX(), r.getBottom(), false));
+        }
+        else
+        {
+            g.setColour (colour.withSaturation (0.5f).darker (2.6f));
+        }
+        g.fillEllipse (r);
+        g.setColour (Colours::black.withAlpha (0.6f));
+        g.drawEllipse (r.expanded (0.5f), 1.0f);
     }
 
-    String dbString (float db) { return db <= -99.0f ? String ("-inf") : String (db, 1); }
-    String utf8 (const char* s) { return String (CharPointer_UTF8 (s)); }
+    void drawScreen (Graphics& g, Rectangle<float> r)
+    {
+        g.setColour (Colours::black.withAlpha (0.55f));
+        g.fillRoundedRectangle (r.expanded (1.5f), 4.0f);
+        g.setGradientFill (ColourGradient (Colour (0xff0a0b0d), 0.0f, r.getY(), Colour (0xff060708), 0.0f, r.getBottom(), false));
+        g.fillRoundedRectangle (r, 3.0f);
+        g.setColour (Colour (0xff2e3138));
+        g.drawRoundedRectangle (r.reduced (0.5f), 3.0f, 1.0f);
+    }
 }
 
 namespace stressulfui
 {
     //==========================================================================
-    ChoiceButtons::ChoiceButtons (RangedAudioParameter& p, const StringArray& labels, Colour on)
-        : attachment (p, [this] (float v) { setCurrent (roundToInt (v)); }, nullptr)
+    void FaceplateLnf::drawRotarySlider (Graphics& g, int x, int y, int w, int h, float pos,
+                                         float startAngle, float endAngle, Slider& s)
     {
-        for (int i = 0; i < labels.size(); ++i)
+        const auto area   = Rectangle<float> ((float) x, (float) y, (float) w, (float) h).reduced (2.0f);
+        const float size  = jmin (area.getWidth(), area.getHeight());
+        const auto centre = area.getCentre();
+        const float r     = size * 0.5f;
+        const float angle = startAngle + pos * (endAngle - startAngle);
+        const bool enabled = s.isEnabled() && s.getAlpha() > 0.6f;
+
+        // tick scale (11 ticks) – ticks up to the value glow red
+        constexpr int numTicks = 11;
+        for (int i = 0; i < numTicks; ++i)
         {
-            auto* b = buttons.add (new TextButton (labels[i]));
-            b->setClickingTogglesState (false);
-            b->setColour (TextButton::buttonOnColourId, on);
-            b->setColour (TextButton::textColourOnId, col::bg);
-            b->onClick = [this, i] { attachment.setValueAsCompleteGesture ((float) i); };
-            addAndMakeVisible (b);
+            const float t = (float) i / (float) (numTicks - 1);
+            const float a = startAngle + t * (endAngle - startAngle);
+            const bool major = i % 5 == 0;
+            const auto p1 = centre.getPointOnCircumference (r * (major ? 0.82f : 0.86f), a);
+            const auto p2 = centre.getPointOnCircumference (r * 0.98f, a);
+            const bool lit = enabled && t <= pos + 0.001f;
+            g.setColour (lit ? stressCol : silkDim.withAlpha (0.7f));
+            g.drawLine ({ p1, p2 }, major ? 2.0f : 1.4f);
         }
+
+        // knob: skirt + cap
+        const float skirtR = r * 0.76f;
+        auto skirt = Rectangle<float> (skirtR * 2.0f, skirtR * 2.0f).withCentre (centre);
+        g.setColour (Colours::black.withAlpha (0.55f));
+        g.fillEllipse (skirt.translated (0.0f, 3.0f).expanded (1.5f));
+        g.setGradientFill (ColourGradient (Colour (0xff2a2c31), skirt.getX(), skirt.getY(),
+                                           Colour (0xff050506), skirt.getRight(), skirt.getBottom(), false));
+        g.fillEllipse (skirt);
+
+        // knurled edge
+        g.setColour (Colours::white.withAlpha (0.05f));
+        for (int i = 0; i < 48; ++i)
+        {
+            const float a = MathConstants<float>::twoPi * (float) i / 48.0f;
+            g.drawLine ({ centre.getPointOnCircumference (skirtR * 0.86f, a), centre.getPointOnCircumference (skirtR * 0.99f, a) }, 1.0f);
+        }
+
+        const float capR = skirtR * 0.80f;
+        auto cap = Rectangle<float> (capR * 2.0f, capR * 2.0f).withCentre (centre);
+        g.setGradientFill (ColourGradient (Colour (0xff34363c), cap.getX(), cap.getY(),
+                                           Colour (0xff0b0b0d), cap.getRight(), cap.getBottom(), false));
+        g.fillEllipse (cap);
+        g.setColour (Colours::white.withAlpha (0.08f));
+        g.drawEllipse (cap.reduced (0.5f), 1.0f);
+
+        const auto p1 = centre.getPointOnCircumference (capR * 0.25f, angle);
+        const auto p2 = centre.getPointOnCircumference (skirtR * 0.95f, angle);
+        g.setColour (enabled ? Colours::white : silkDim);
+        g.drawLine ({ p1, p2 }, jmax (2.0f, size * 0.03f));
+    }
+
+    //==========================================================================
+    LedChoice::LedChoice (RangedAudioParameter& p, const StringArray& l, const String& t)
+        : labels (l), title (t),
+          attachment (p, [this] (float v) { current = roundToInt (v); repaint(); }, nullptr)
+    {
         attachment.sendInitialUpdate();
     }
 
-    void ChoiceButtons::setTooltips (const StringArray& t)
+    void LedChoice::setAllLit (bool b)
     {
-        for (int i = 0; i < jmin (t.size(), buttons.size()); ++i)
-            buttons[i]->setTooltip (t[i]);
+        if (b != allLit) { allLit = b; repaint(); }
     }
 
-    void ChoiceButtons::setCurrent (int m)
+    Rectangle<float> LedChoice::rowBounds (int i) const
     {
-        for (int i = 0; i < buttons.size(); ++i)
-            buttons[i]->setToggleState (i == m, dontSendNotification);
+        const float top = 16.0f, rowH = (getHeight() - top) / (float) labels.size();
+        return { 0.0f, top + rowH * (float) i, (float) getWidth(), rowH };
     }
 
-    void ChoiceButtons::resized()
+    int LedChoice::rowAt (Point<int> p) const
     {
-        const int gap = 5, n = buttons.size();
-        const float w = (float) (getWidth() - gap * (n - 1)) / (float) n;
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < labels.size(); ++i)
+            if (rowBounds (i).contains (p.toFloat()))
+                return i;
+        return -1;
+    }
+
+    void LedChoice::mouseDown (const MouseEvent& e)
+    {
+        const int i = rowAt (e.getPosition());
+        if (i >= 0)
+            attachment.setValueAsCompleteGesture ((float) i);
+    }
+
+    String LedChoice::getTooltip()
+    {
+        const int i = rowAt (getMouseXYRelative());
+        return isPositiveAndBelow (i, tips.size()) ? tips[i] : String();
+    }
+
+    void LedChoice::paint (Graphics& g)
+    {
+        g.setColour (silkDim);
+        g.setFont (uiFont (10.0f, true));
+        g.drawText (title, Rectangle<float> (0.0f, 0.0f, (float) getWidth(), 13.0f), Justification::centredLeft);
+
+        for (int i = 0; i < labels.size(); ++i)
         {
-            const int x0 = roundToInt ((w + gap) * (float) i), x1 = i == n - 1 ? getWidth() : roundToInt ((w + gap) * (float) i + w);
-            buttons[i]->setBounds (x0, 0, x1 - x0, getHeight());
+            auto r = rowBounds (i);
+            const bool on = allLit || i == current;
+            drawLed (g, { r.getX() + 6.0f, r.getCentreY() }, 8.0f, ledRed, on);
+            g.setColour (i == current ? silk : silkDim);
+            g.setFont (uiFont (11.0f, i == current));
+            g.drawText (labels[i], r.withTrimmedLeft (17.0f), Justification::centredLeft);
         }
     }
 
     //==========================================================================
-    void TransferCurve::update (int r, bool s, float lvl)
+    LedToggle::LedToggle (RangedAudioParameter& p, const String& l, Colour c)
+        : label (l), ledCol (c),
+          attachment (p, [this] (float v) { on = v >= 0.5f; repaint(); }, nullptr)
     {
-        if (r == ratio && s == smash && std::abs (lvl - level) < 0.05f)
-            return;
-        ratio = r; smash = s; level = lvl;
-        repaint();
+        attachment.sendInitialUpdate();
     }
 
-    void TransferCurve::paint (Graphics& g)
+    void LedToggle::mouseDown (const MouseEvent&)
     {
-        auto full = getLocalBounds().toFloat();
-        drawWell (g, full);
+        attachment.setValueAsCompleteGesture (on ? 0.0f : 1.0f);
+    }
 
-        auto plot = full.reduced (12.0f);
-        plot.removeFromTop (22.0f);
-        plot.removeFromLeft (22.0f);
-        plot.removeFromBottom (14.0f);
-        plot = plot.withSizeKeepingCentre (jmin (plot.getWidth(), plot.getHeight()), jmin (plot.getWidth(), plot.getHeight()));
-
-        constexpr float lo = -50.0f, hi = 0.0f;
-        auto px = [&] (float db) { return plot.getX() + plot.getWidth() * jlimit (0.0f, 1.0f, (db - lo) / (hi - lo)); };
-        auto py = [&] (float db) { return plot.getBottom() - plot.getHeight() * jlimit (0.0f, 1.0f, (db - lo) / (hi - lo)); };
-
-        g.setFont (uiFont (9.5f));
-        for (float db = lo; db <= hi; db += 10.0f)
-        {
-            g.setColour (col::panelEdge.withAlpha (0.7f));
-            g.drawHorizontalLine (roundToInt (py (db)), plot.getX(), plot.getRight());
-            g.drawVerticalLine (roundToInt (px (db)), plot.getY(), plot.getBottom());
-            if (roundToInt (db) % 20 == 0 || roundToInt (db) == roundToInt (lo))
-            {
-                g.setColour (col::textDim);
-                g.drawText (String (roundToInt (db)), Rectangle<float> (plot.getX() - 26.0f, py (db) - 7.0f, 22.0f, 14.0f), Justification::centredRight);
-                g.drawText (String (roundToInt (db)), Rectangle<float> (px (db) - 15.0f, plot.getBottom() + 2.0f, 30.0f, 12.0f), Justification::centred);
-            }
-        }
-
-        g.setColour (col::textDim.withAlpha (0.35f));
-        g.drawLine (px (lo), py (lo), px (hi), py (hi), 1.0f);
-
-        const float tx = px (stressulf::thresholdDb);
-        g.setColour (stressCol.withAlpha (0.35f));
-        g.drawVerticalLine (roundToInt (tx), plot.getY(), plot.getBottom());
-
-        Path curvePath;
-        for (int i = 0; i <= 150; ++i)
-        {
-            const float in = lo + (hi - lo) * (float) i / 150.0f;
-            const float out = in - stressulf::staticGr (in, ratio, smash);
-            if (i == 0) curvePath.startNewSubPath (px (in), py (out));
-            else        curvePath.lineTo (px (in), py (out));
-        }
-        Path fill (curvePath);
-        fill.lineTo (px (hi), plot.getBottom());
-        fill.lineTo (px (lo), plot.getBottom());
-        fill.closeSubPath();
-        g.setGradientFill (ColourGradient (stressCol.withAlpha (0.22f), 0.0f, plot.getY(), stressCol.withAlpha (0.02f), 0.0f, plot.getBottom(), false));
-        g.fillPath (fill);
-        g.setColour (stressCol);
-        g.strokePath (curvePath, PathStrokeType (2.0f, PathStrokeType::curved, PathStrokeType::rounded));
-
-        if (level > lo)
-        {
-            const float l = jmin (level, hi);
-            const Point<float> pt (px (l), py (l - stressulf::staticGr (l, ratio, smash)));
-            g.setColour (stressSoft.withAlpha (0.3f));
-            g.fillEllipse (Rectangle<float> (14.0f, 14.0f).withCentre (pt));
-            g.setColour (stressSoft);
-            g.fillEllipse (Rectangle<float> (7.0f, 7.0f).withCentre (pt));
-        }
-
-        auto head = full.reduced (12.0f, 8.0f).removeFromTop (16.0f);
-        g.setColour (col::text);
-        g.setFont (uiFont (11.0f, true));
-        g.drawText ("KURVE", head, Justification::centredLeft);
-        g.setColour (col::textDim);
-        g.setFont (uiFont (10.0f, true));
-        g.drawText (smash ? String ("SMASH") : stressulf::ratioNames[jmax (0, ratio)].toUpperCase(), head, Justification::centredRight);
+    void LedToggle::paint (Graphics& g)
+    {
+        auto r = getLocalBounds().toFloat();
+        drawLed (g, { r.getX() + 6.0f, r.getCentreY() }, 8.0f, ledCol, on);
+        g.setColour (on ? silk : silkDim);
+        g.setFont (uiFont (11.0f, on));
+        g.drawText (label, r.withTrimmedLeft (17.0f), Justification::centredLeft);
     }
 
     //==========================================================================
@@ -155,57 +196,27 @@ namespace stressulfui
     void History::paint (Graphics& g)
     {
         auto full = getLocalBounds().toFloat();
-        drawWell (g, full);
+        drawScreen (g, full);
 
-        auto head = full.reduced (12.0f, 8.0f).removeFromTop (16.0f);
-        g.setColour (col::text);
-        g.setFont (uiFont (11.0f, true));
-        g.drawText ("HISTORIKK", head, Justification::centredLeft);
-
-        auto legend = head;
-        auto item = [&] (const String& name, Colour c, bool area)
-        {
-            auto r = legend.removeFromRight (90.0f);
-            g.setColour (c);
-            if (area) g.fillRect (r.getX(), r.getCentreY() - 4.0f, 14.0f, 8.0f);
-            else      g.fillRect (r.getX(), r.getCentreY() - 1.0f, 14.0f, 2.0f);
-            g.setColour (col::textDim);
-            g.setFont (uiFont (10.0f, true));
-            g.drawText (name, r.withTrimmedLeft (19.0f), Justification::centredLeft);
-        };
-        item ("Ut", col::text, false);
-        item ("Inn", col::slate, true);
-        item ("Demping", stressCol, true);
-
-        auto plot = full.reduced (12.0f);
-        plot.removeFromTop (22.0f);
-        plot.removeFromLeft (24.0f);
-        plot.removeFromRight (24.0f);
+        auto plot = full.reduced (6.0f, 5.0f);
+        g.setColour (silkDim);
+        g.setFont (uiFont (9.0f, true));
+        g.drawText ("GR", plot.removeFromTop (11.0f), Justification::centredLeft);
 
         constexpr float lo = -60.0f, grRange = 30.0f;
         auto grLane = plot.removeFromTop (plot.getHeight() * 0.36f);
-        plot.removeFromTop (10.0f);
+        plot.removeFromTop (4.0f);
+        g.setFont (uiFont (9.0f, true));
+        g.drawText (utf8 ("INN · UT"), plot.removeFromTop (11.0f), Justification::centredLeft);
         auto lvLane = plot;
 
         auto ly = [&] (float db) { return lvLane.getBottom() - lvLane.getHeight() * jlimit (0.0f, 1.0f, (db - lo) / -lo); };
         auto gy = [&] (float gr) { return grLane.getY() + grLane.getHeight() * jlimit (0.0f, 1.0f, gr / grRange); };
 
-        g.setFont (uiFont (9.5f));
-        for (float db = 0.0f; db >= lo; db -= 20.0f)
-        {
-            g.setColour (col::panelEdge.withAlpha (0.7f));
+        g.setColour (Colour (0xff1c1e23));
+        for (float db = -20.0f; db > lo; db -= 20.0f)
             g.drawHorizontalLine (roundToInt (ly (db)), lvLane.getX(), lvLane.getRight());
-            g.setColour (col::textDim);
-            g.drawText (String (roundToInt (db)), Rectangle<float> (lvLane.getX() - 26.0f, ly (db) - 7.0f, 22.0f, 14.0f), Justification::centredRight);
-        }
-        for (float gr : { 0.0f, 15.0f, 30.0f })
-        {
-            g.setColour (col::panelEdge.withAlpha (0.7f));
-            g.drawHorizontalLine (roundToInt (gy (gr)), grLane.getX(), grLane.getRight());
-            g.setColour (stressCol.withAlpha (0.8f));
-            g.drawText (gr == 0.0f ? String ("0") : "-" + String (roundToInt (gr)),
-                        Rectangle<float> (grLane.getRight() + 4.0f, gy (gr) - 7.0f, 22.0f, 14.0f), Justification::centredLeft);
-        }
+        g.drawHorizontalLine (roundToInt (gy (15.0f)), grLane.getX(), grLane.getRight());
 
         const float dx = lvLane.getWidth() / (float) (numPoints - 1);
         auto at = [&] (int i) -> const Levels& { return data[(size_t) ((write + i) % numPoints)]; };
@@ -229,65 +240,99 @@ namespace stressulfui
 
         g.setColour (col::slate.withAlpha (0.45f));
         g.fillPath (inArea);
-        g.setColour (col::text.withAlpha (0.85f));
-        g.strokePath (outLine, PathStrokeType (1.4f));
-        g.setGradientFill (ColourGradient (stressCol.withAlpha (0.45f), 0.0f, grLane.getY(), stressCol.withAlpha (0.1f), 0.0f, grLane.getBottom(), false));
+        g.setColour (silk.withAlpha (0.85f));
+        g.strokePath (outLine, PathStrokeType (1.2f));
+        g.setColour (stressCol.withAlpha (0.35f));
         g.fillPath (grArea);
         g.setColour (stressCol);
-        g.strokePath (grLine, PathStrokeType (1.6f));
+        g.strokePath (grLine, PathStrokeType (1.4f));
     }
 
     //==========================================================================
-    void Meters::setLevels (const Levels& l)
+    void GrLadder::setGr (float g)
     {
-        shown.inDb  = jmax (l.inDb,  shown.inDb - 1.5f);
-        shown.outDb = jmax (l.outDb, shown.outDb - 1.5f);
-        shown.grDb  = l.grDb;
-        if (l.grDb >= grHold) { grHold = l.grDb; holdFrames = 45; }
-        else if (--holdFrames <= 0) grHold = jmax (l.grDb, grHold - 0.3f);
+        gr = g;
+        if (g >= hold) { hold = g; holdFrames = 45; }
+        else if (--holdFrames <= 0) hold = jmax (g, hold - 0.3f);
         repaint();
     }
 
-    void Meters::paint (Graphics& g)
+    void GrLadder::paint (Graphics& g)
+    {
+        static constexpr int steps[] = { 1, 2, 3, 4, 6, 10, 15, 20, 30 };
+        auto r = getLocalBounds().toFloat();
+
+        g.setColour (silkDim);
+        g.setFont (uiFont (10.0f, true));
+        g.drawText ("GR", r.removeFromTop (13.0f), Justification::centred);
+        g.setColour (silk);
+        g.setFont (uiFont (10.0f, true));
+        g.drawText (hold < 0.05f ? String ("0.0") : "-" + String (hold, 1), r.removeFromBottom (14.0f), Justification::centred);
+        r.removeFromBottom (4.0f);
+
+        drawScreen (g, r);
+        r = r.reduced (3.0f, 5.0f);
+        const int n = (int) std::size (steps);
+        const float rowH = r.getHeight() / (float) n;
+        for (int i = 0; i < n; ++i)
+        {
+            auto row = Rectangle<float> (r.getX(), r.getY() + rowH * (float) i, r.getWidth(), rowH);
+            const auto c = steps[i] >= 20 ? ledRed : steps[i] >= 6 ? ledAmber : ledGreen;
+            const bool on = gr >= (float) steps[i] - 0.5f || std::abs (hold - (float) steps[i]) < 0.5f;
+            drawLed (g, { row.getX() + 6.0f, row.getCentreY() }, 7.0f, c, on);
+            g.setColour (on ? silk : silkDim);
+            g.setFont (uiFont (9.5f, true));
+            g.drawText (String (steps[i]), row.withTrimmedLeft (13.0f), Justification::centredRight);
+        }
+    }
+
+    //==========================================================================
+    void LevelRows::setLevels (const Levels& l)
+    {
+        shown.inDb  = jmax (l.inDb,  shown.inDb - 1.5f);
+        shown.outDb = jmax (l.outDb, shown.outDb - 1.5f);
+        repaint();
+    }
+
+    void LevelRows::paint (Graphics& g)
     {
         auto r = getLocalBounds().toFloat();
-        const float w = (r.getWidth() - 12.0f) / 3.0f;
+        drawScreen (g, r);
+        r = r.reduced (6.0f, 4.0f);
 
-        auto bar = [&] (Rectangle<float> b, const String& label, const String& value, float t, bool fromTop, Colour c)
+        auto row = [&] (Rectangle<float> rr, const String& name, float db)
         {
-            auto labelR = b.removeFromBottom (14.0f);
-            auto valueR = b.removeFromTop (14.0f);
-            b.removeFromTop (2.0f);
-            g.setColour (col::well);
-            g.fillRoundedRectangle (b, 2.0f);
-            g.setColour (col::panelEdge);
-            g.drawRoundedRectangle (b.reduced (0.5f), 2.0f, 1.0f);
-            t = jlimit (0.0f, 1.0f, t);
-            auto fill = fromTop ? b.withHeight (b.getHeight() * t) : b.withTop (b.getBottom() - b.getHeight() * t);
-            g.setColour (c);
-            g.fillRoundedRectangle (fill.reduced (1.0f, 0.0f), 2.0f);
-            g.setColour (col::textDim);
-            g.setFont (uiFont (9.5f, true));
-            g.drawText (label, labelR, Justification::centred);
-            g.setColour (col::text);
-            g.drawFittedText (value, valueR.toNearestInt(), Justification::centred, 1, 0.8f);
+            g.setColour (silkDim);
+            g.setFont (uiFont (9.0f, true));
+            g.drawText (name, rr.removeFromLeft (22.0f), Justification::centredLeft);
+            constexpr int n = 16;
+            const float w = rr.getWidth() / (float) n;
+            for (int i = 0; i < n; ++i)
+            {
+                const float segDb = -48.0f + 3.0f * (float) i;   // -48 … -3, last segment = 0 dBFS
+                const auto c = segDb >= -6.0f ? ledRed : segDb >= -18.0f ? ledAmber : ledGreen;
+                const bool on = db >= segDb;
+                auto seg = Rectangle<float> (rr.getX() + w * (float) i, rr.getCentreY() - 3.0f, w - 2.0f, 6.0f);
+                g.setColour (on ? c : c.withAlpha (0.14f));
+                g.fillRoundedRectangle (seg, 1.0f);
+            }
         };
-
-        auto lvl = [] (float db) { return (db + 60.0f) / 60.0f; };
-        bar (r.removeFromLeft (w), "INN", dbString (shown.inDb), lvl (shown.inDb), false, col::slate);
-        r.removeFromLeft (6.0f);
-        bar (r.removeFromLeft (w), "GR", grHold < 0.05f ? String ("0.0") : "-" + String (grHold, 1), shown.grDb / 30.0f, true, stressCol);
-        r.removeFromLeft (6.0f);
-        bar (r, "UT", dbString (shown.outDb), lvl (shown.outDb), false, col::text.withAlpha (0.75f));
+        row (r.removeFromTop (r.getHeight() * 0.5f), "INN", shown.inDb);
+        row (r, "UT", shown.outDb);
     }
 }
 
 //==============================================================================
 StressulfEditor::StressulfEditor (StressulfProcessor& p)
     : AudioProcessorEditor (&p), proc (p), presetBar (*p.presets),
-      ratioButtons (*p.apvts.getParameter (ParamIDs::ratio),
-                    { "1:1", "2:1", "3:1", "4:1", "6:1", "10:1", "20:1", "NUKE", "OPTO" }, stressCol),
-      distButtons (*p.apvts.getParameter (ParamIDs::dist), { "CLEAN", "DIST 2", "DIST 3" }, stressCol)
+      ratioLeds (*p.apvts.getParameter (ParamIDs::ratio),
+                 { "1:1", "2:1", "3:1", "4:1", "6:1", "10:1", "20:1", "NUKE", "OPTO" }, "RATIO"),
+      distLeds (*p.apvts.getParameter (ParamIDs::dist), { "CLEAN", "DIST 2", "DIST 3" }, "DIST"),
+      smashLed   (*p.apvts.getParameter (ParamIDs::smash),   "SMASH", ledRed),
+      detHpLed   (*p.apvts.getParameter (ParamIDs::detHp),   "HP",    ledRed),
+      bandLed    (*p.apvts.getParameter (ParamIDs::detBand), "BAND",  ledRed),
+      audioHpLed (*p.apvts.getParameter (ParamIDs::audioHp), "HP",    ledRed),
+      linkLed    (*p.apvts.getParameter (ParamIDs::link),    "LINK",  ledRed)
 {
     setLookAndFeel (&lnf);
     background = ImageCache::getFromMemory (BinaryData::background_jpg, BinaryData::background_jpgSize);
@@ -296,7 +341,7 @@ StressulfEditor::StressulfEditor (StressulfProcessor& p)
     content.addAndMakeVisible (presetBar);
     presetBar.attachOverlayTo (content);
 
-    ratioButtons.setTooltips ({
+    ratioLeds.setTooltips ({
         utf8 ("1:1 – ingen kompresjon, bare farge (bruk med DIST 2 / DIST 3)."),
         utf8 ("2:1 – svært myk knekk, nesten usynlig utjevning."),
         utf8 ("3:1 – myk og musikalsk."),
@@ -306,24 +351,23 @@ StressulfEditor::StressulfEditor (StressulfProcessor& p)
         utf8 ("20:1 – begrenser."),
         utf8 ("NUKE – nesten brickwall, svært hard knekk."),
         utf8 ("OPTO – programavhengig: rask attack, release som blir langsommere jo lenger den demper.") });
-    distButtons.setTooltips ({
+    distLeds.setTooltips ({
         utf8 ("Ren kompresjon."),
         utf8 ("DIST 2 – like overtoner (rør-aktig): varm og tykk. Øker med kompresjonen."),
         utf8 ("DIST 3 – odde overtoner (tape-aktig): kant og bitt. Øker med kompresjonen.") });
-    content.addAndMakeVisible (ratioButtons);
-    content.addAndMakeVisible (distButtons);
+    content.addAndMakeVisible (ratioLeds);
+    content.addAndMakeVisible (distLeds);
 
-    setupToggle (smashBtn,   ParamIDs::smash,   utf8 ("SMASH: alle knapper inne. Overkomprimerer med rask attack og ekstra forvrengning – for rom og parallell knusing."));
-    setupToggle (detHpBtn,   ParamIDs::detHp,   utf8 ("Detektor-HP: detektoren lytter mindre på bassen, så den ikke pumper av basstromme og bass."));
-    setupToggle (bandBtn,    ParamIDs::detBand, utf8 ("Band-emfase: detektoren lytter ekstra på 6 kHz. Demper S-lyder og skarpe topper – fungerer som en de-esser."));
-    setupToggle (audioHpBtn, ParamIDs::audioHp, utf8 ("Audio-HP: fjerner rumling under 80 Hz i selve lyden."));
-    setupToggle (linkBtn,    ParamIDs::link,    utf8 ("Stereo-link: begge kanaler dempes likt, så stereobildet står stille."));
-    smashBtn.setColour (TextButton::buttonOnColourId, col::red);
+    setupToggle (smashLed,   utf8 ("SMASH: alle knapper inne. Overkomprimerer med rask attack og ekstra forvrengning – for rom og parallell knusing."));
+    setupToggle (detHpLed,   utf8 ("Detektor-HP: detektoren lytter mindre på bassen, så den ikke pumper av basstromme og bass."));
+    setupToggle (bandLed,    utf8 ("Band-emfase: detektoren lytter ekstra på 6 kHz. Demper S-lyder og skarpe topper – fungerer som en de-esser."));
+    setupToggle (audioHpLed, utf8 ("Audio-HP: fjerner rumling under 80 Hz i selve lyden."));
+    setupToggle (linkLed,    utf8 ("Stereo-link: begge kanaler dempes likt, så stereobildet står stille."));
 
-    content.addAndMakeVisible (curve);
     content.addAndMakeVisible (history);
-    content.addAndMakeVisible (meters);
-    for (auto* c : std::initializer_list<Component*> { &curve, &history, &meters })
+    content.addAndMakeVisible (grLadder);
+    content.addAndMakeVisible (levelRows);
+    for (auto* c : std::initializer_list<Component*> { &history, &grLadder, &levelRows })
         c->setInterceptsMouseClicks (false, false);
 
     const std::pair<sbaudio::Knob*, const char*> knobs[] = {
@@ -335,10 +379,9 @@ StressulfEditor::StressulfEditor (StressulfProcessor& p)
         sliderAtts.push_back (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (proc.apvts, id, k->slider));
         if (auto* prm = proc.apvts.getParameter (id))
             k->slider.setDoubleClickReturnValue (true, prm->convertFrom0to1 (prm->getDefaultValue()));
-        k->slider.setColour (Slider::rotarySliderFillColourId, stressCol);
+        k->label.setColour (Label::textColourId, silk);
+        k->label.setFont (uiFont (11.0f, true));
     }
-    output.slider.getProperties().set ("bipolar", true);
-    input.slider.getProperties().set ("bipolar", true);
 
     input.slider.setTooltip (utf8 ("Driver signalet inn mot den faste terskelen. Mer input = mer kompresjon (og mer farge)."));
     attack.slider.setTooltip (utf8 ("Hvor raskt den griper inn: fra 50 µs (fanger alt) til 30 ms (slipper anslaget gjennom)."));
@@ -358,14 +401,10 @@ StressulfEditor::~StressulfEditor()
     setLookAndFeel (nullptr);
 }
 
-void StressulfEditor::setupToggle (TextButton& b, const char* id, const String& tip)
+void StressulfEditor::setupToggle (stressulfui::LedToggle& t, const String& tip)
 {
-    b.setClickingTogglesState (true);
-    b.setColour (TextButton::buttonOnColourId, stressCol);
-    b.setColour (TextButton::textColourOnId, col::bg);
-    b.setTooltip (tip);
-    content.addAndMakeVisible (b);
-    buttonAtts.push_back (std::make_unique<AudioProcessorValueTreeState::ButtonAttachment> (proc.apvts, id, b));
+    t.setTooltip (tip);
+    content.addAndMakeVisible (t);
 }
 
 void StressulfEditor::paint (Graphics& g)
@@ -383,87 +422,105 @@ void StressulfEditor::resized()
 
 void StressulfEditor::layoutContent()
 {
-    presetBar.setBounds (designW - 8 - 470, 8, 470, 28);
+    presetBar.setBounds (designW - 8 - 470, 7, 470, 26);
     presetBar.getOverlay().setBounds (content.getLocalBounds());
 
-    ratioButtons.setBounds (12, 56, 700, 32);
-    smashBtn.setBounds (designW - 12 - 160, 56, 160, 32);
+    faceplate = { 0, 40, designW, designH - 40 };
+    const int top = faceplate.getY() + 14, bottom = designH - 14;
 
-    const int dispY = 100, dispH = 212;
-    curve.setBounds (12, dispY, dispH, dispH);
-    meters.setBounds (designW - 12 - 104, dispY, 104, dispH);
-    history.setBounds (curve.getRight() + 10, dispY, meters.getX() - 10 - curve.getRight() - 10, dispH);
+    // knobs, left to right like the hardware
+    input.setBounds   (34,  top + 20, 112, 172);
+    attack.setBounds  (150, top + 20, 92, 172);
+    release.setBounds (246, top + 20, 92, 172);
 
-    const int panelY = dispY + dispH + 12, panelH = designH - panelY - 12, gap = 12;
-    dynPanel    = { 12, panelY, 360, panelH };
-    colourPanel = { dynPanel.getRight() + gap, panelY, 250, panelH };
-    outPanel    = { colourPanel.getRight() + gap, panelY, designW - 12 - (colourPanel.getRight() + gap), panelH };
+    // metering
+    grLadder.setBounds (350, top, 42, bottom - top);
+    history.setBounds  (402, top, 168, 168);
+    levelRows.setBounds (402, top + 176, 168, bottom - top - 176);
 
-    auto knobRow = [] (Rectangle<int> panel, std::initializer_list<sbaudio::Knob*> ks)
-    {
-        auto r = panel.reduced (14, 12);
-        r.removeFromTop (26);
-        r = r.withSizeKeepingCentre (r.getWidth(), jmin (r.getHeight(), 140));
-        const int w = r.getWidth() / (int) ks.size();
-        for (auto* k : ks)
-            k->setBounds (r.removeFromLeft (w).reduced (4, 0));
-    };
-    knobRow (dynPanel, { &input, &attack, &release });
-    knobRow (outPanel, { &mix, &output });
+    // ratio LEDs + SMASH
+    ratioLeds.setBounds (588, top, 70, 196);
+    smashLed.setBounds  (588, top + 204, 70, 20);
 
-    // colour panel: distortion row, then a 2 x 2 grid of detector/audio toggles
-    auto r = colourPanel.reduced (16, 12);
-    r.removeFromTop (28);
-    distButtons.setBounds (r.removeFromTop (34));
-    r.removeFromTop (30);
-    const int bw = (r.getWidth() - 6) / 2, bh = 32;
-    detHpBtn.setBounds   (r.getX(),           r.getY(),          bw, bh);
-    bandBtn.setBounds    (r.getX() + bw + 6,  r.getY(),          bw, bh);
-    audioHpBtn.setBounds (r.getX(),           r.getY() + bh + 8, bw, bh);
-    linkBtn.setBounds    (r.getX() + bw + 6,  r.getY() + bh + 8, bw, bh);
+    // character: DIST, DETEKTOR, AUDIO
+    modeArea = { 670, top, 96, bottom - top };
+    distLeds.setBounds (670, top, 96, 76);
+    detHpLed.setBounds   (670, top + 100, 96, 20);
+    bandLed.setBounds    (670, top + 120, 96, 20);
+    audioHpLed.setBounds (670, top + 162, 96, 20);
+    linkLed.setBounds    (670, top + 182, 96, 20);
+
+    mix.setBounds    (776, top + 20, 82, 172);
+    output.setBounds (862, top + 20, 112, 172);
 }
 
 void StressulfEditor::paintContent (Graphics& g)
 {
     const auto full = content.getLocalBounds().toFloat();
     g.fillAll (col::bg);
+
+    // top bar
+    auto bar = full.withHeight (40.0f);
+    g.setColour (col::panel);
+    g.fillRect (bar);
+    sbaudio::drawBrandTitle (g, { 14.0f, 0.0f, 340.0f, 40.0f }, "Stressulf", "COMPRESSOR", stressCol);
+
+    // faceplate: dark anodised metal with a whisper of the painting behind it
+    auto plate = faceplate.toFloat();
+    g.setGradientFill (ColourGradient (plateTop, 0.0f, plate.getY(), plateBot, 0.0f, plate.getBottom(), false));
+    g.fillRect (plate);
     if (background.isValid())
     {
-        g.drawImage (background, full, RectanglePlacement::centred | RectanglePlacement::fillDestination);
-        g.setColour (col::bg.withAlpha (0.12f));   // keep text and controls readable
-        g.fillRect (full);
+        Graphics::ScopedSaveState ss (g);
+        g.reduceClipRegion (faceplate);
+        g.setOpacity (0.10f);
+        g.drawImage (background, plate, RectanglePlacement::centred | RectanglePlacement::fillDestination);
+    }
+    // brushed lines
+    Random rng (7);
+    for (float y = plate.getY(); y < plate.getBottom(); y += 2.0f)
+    {
+        g.setColour (Colours::white.withAlpha (0.006f + 0.012f * rng.nextFloat()));
+        g.drawHorizontalLine ((int) y, plate.getX(), plate.getRight());
+    }
+    g.setColour (Colours::white.withAlpha (0.10f));
+    g.drawHorizontalLine ((int) plate.getY(), plate.getX(), plate.getRight());
+    g.setColour (Colours::black);
+    g.drawHorizontalLine ((int) plate.getY() + 1, plate.getX(), plate.getRight());
+
+    // rack ears with screws
+    for (float x : { 0.0f, full.getRight() - 24.0f })
+    {
+        auto ear = Rectangle<float> (x, plate.getY(), 24.0f, plate.getHeight());
+        g.setColour (Colours::black.withAlpha (0.35f));
+        g.fillRect (ear);
+        g.setColour (Colours::white.withAlpha (0.05f));
+        g.drawVerticalLine ((int) (x == 0.0f ? ear.getRight() - 1.0f : ear.getX()), ear.getY(), ear.getBottom());
+        for (float sy : { ear.getY() + 26.0f, ear.getBottom() - 26.0f })
+        {
+            auto screw = Rectangle<float> (11.0f, 11.0f).withCentre ({ ear.getCentreX(), sy });
+            g.setGradientFill (ColourGradient (Colour (0xff6a6d73), screw.getX(), screw.getY(),
+                                               Colour (0xff25272b), screw.getRight(), screw.getBottom(), false));
+            g.fillEllipse (screw);
+            g.setColour (Colours::black.withAlpha (0.7f));
+            g.drawLine ({ screw.getX() + 2.5f, screw.getCentreY(), screw.getRight() - 2.5f, screw.getCentreY() }, 1.4f);
+            g.drawLine ({ screw.getCentreX(), screw.getY() + 2.5f, screw.getCentreX(), screw.getBottom() - 2.5f }, 1.4f);
+        }
     }
 
-    auto bar = full.withHeight (44.0f);
-    g.setColour (col::panel.withAlpha (0.80f));
-    g.fillRect (bar);
-    g.setColour (col::panelEdge);
-    g.fillRect (bar.removeFromBottom (1.0f));
-    sbaudio::drawBrandTitle (g, { 14.0f, 0.0f, 340.0f, 44.0f }, "Stressulf", "COMPRESSOR", stressCol);
+    // section dividers
+    g.setColour (Colours::black.withAlpha (0.5f));
+    for (int x : { 343, 580, 664, 770 })
+        g.drawVerticalLine (x, plate.getY() + 14.0f, plate.getBottom() - 14.0f);
+    g.setColour (Colours::white.withAlpha (0.05f));
+    for (int x : { 344, 581, 665, 771 })
+        g.drawVerticalLine (x, plate.getY() + 14.0f, plate.getBottom() - 14.0f);
 
-    auto panel = [&] (Rectangle<int> rr, const String& title, const String& note)
-    {
-        auto r = rr.toFloat();
-        g.setColour (col::panel.withAlpha (0.50f));
-        g.fillRoundedRectangle (r, 6.0f);
-        g.setColour (col::panelEdge);
-        g.drawRoundedRectangle (r.reduced (0.5f), 6.0f, 1.0f);
-        auto head = r.reduced (16.0f, 12.0f).removeFromTop (16.0f);
-        g.setColour (stressCol);
-        g.setFont (uiFont (11.0f, true));
-        g.drawText (title, head, Justification::centredLeft);
-        g.setColour (col::textDim);
-        g.setFont (uiFont (10.0f));
-        g.drawText (note, head, Justification::centredRight);
-    };
-    panel (dynPanel, "DYNAMIKK", timesFixed ? utf8 ("attack/release styres av OPTO") : utf8 ("inn, attack og release"));
-    panel (colourPanel, "KARAKTER", utf8 ("farge og detektor"));
-    panel (outPanel, "UT", utf8 ("blanding og nivå"));
-
-    // small caption above the toggle grid
-    g.setColour (col::textDim);
-    g.setFont (uiFont (9.5f, true));
-    g.drawText (utf8 ("DETEKTOR  ·  LYD"), Rectangle<int> (detHpBtn.getX(), detHpBtn.getY() - 18, 200, 14), Justification::centredLeft);
+    // silkscreen captions for the character column
+    g.setColour (silkDim);
+    g.setFont (uiFont (10.0f, true));
+    g.drawText ("DETEKTOR", Rectangle<int> (modeArea.getX(), detHpLed.getY() - 16, modeArea.getWidth(), 13), Justification::centredLeft);
+    g.drawText ("AUDIO",    Rectangle<int> (modeArea.getX(), audioHpLed.getY() - 16, modeArea.getWidth(), 13), Justification::centredLeft);
 }
 
 void StressulfEditor::timerCallback()
@@ -486,17 +543,13 @@ void StressulfEditor::timerCallback()
     }
 
     history.push (last);
-    meters.setLevels (last);
+    grLadder.setGr (last.grDb);
+    levelRows.setLevels (last);
 
     const auto s = proc.currentSettings();
-    curve.update (s.ratio, s.smash, last.inDb > -99.0f ? last.inDb + s.inputDb : -100.0f);
+    ratioLeds.setAllLit (s.smash);
 
     const bool fixed = s.ratio == stressulf::opto && ! s.smash;
     attack.setAlpha (fixed ? 0.4f : 1.0f);
     release.setAlpha (fixed ? 0.4f : 1.0f);
-    if (fixed != timesFixed)
-    {
-        timesFixed = fixed;
-        content.repaint (dynPanel);
-    }
 }
