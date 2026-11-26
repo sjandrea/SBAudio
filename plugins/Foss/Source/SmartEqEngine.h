@@ -2,6 +2,7 @@
 
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_dsp/juce_dsp.h>
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <vector>
@@ -45,8 +46,10 @@ namespace foss
               { 10000, -9 }, { 16000, -14 }, { 20000, -19 } },
             { { 20, -30 }, { 80, -14 }, { 150, -3 }, { 300, 0.5f }, { 700, 0.5f }, { 1500, -1.5f }, { 3000, -3 },
               { 5000, -4.5f }, { 8000, -8 }, { 12000, -12 }, { 16000, -17 }, { 20000, -24 } },
-            { { 20, -28 }, { 70, -12 }, { 150, -1 }, { 300, 0.5f }, { 800, -0.5f }, { 1500, -2.5f }, { 3000, -4.5f },
-              { 6000, -7 }, { 10000, -10.5f }, { 16000, -16 }, { 20000, -22 } },
+            // acoustic guitar: natural body around 100–300 Hz (measured on real recordings), same top end as before
+            { { 20, -24 }, { 50, -12 }, { 70, -5 }, { 100, 1.5f }, { 130, 4 }, { 170, 5 }, { 220, 4.5f }, { 300, 3 },
+              { 400, 1.5f }, { 550, 0 }, { 800, -0.8f }, { 1500, -2.7f }, { 3000, -4.5f }, { 6000, -7 },
+              { 10000, -10.5f }, { 16000, -16 }, { 20000, -22 } },
             { { 20, -34 }, { 90, -16 }, { 160, -4 }, { 350, 0 }, { 800, 0 }, { 1600, -1.5f }, { 3000, -3.5f },
               { 5000, -6 }, { 8000, -10 }, { 12000, -16 }, { 20000, -30 } },
             { { 20, -2 }, { 50, 4 }, { 100, 4 }, { 200, 2 }, { 500, 0 }, { 1000, -1.5f }, { 2000, -3.5f }, { 4000, -6 },
@@ -103,37 +106,75 @@ namespace foss
         }
     }
 
-    /** Static correction from a learned spectrum (dB, any offset) and a profile. */
-    inline void computeCorrection (const float* learnedDb, int profile, float* out)
+    inline float smoothstep (float edge0, float edge1, float x)
     {
-        float maxL = -200.0f;
-        for (int b = 0; b < numBands; ++b) maxL = juce::jmax (maxL, learnedDb[b]);
+        const float t = juce::jlimit (0.0f, 1.0f, (x - edge0) / (edge1 - edge0));
+        return t * t * (3.0f - 2.0f * t);
+    }
 
-        std::array<float, numBands> diff {}, valid {};
-        float sum = 0.0f, wsum = 0.0f;
+    /** Static correction from a learned spectrum (dB, any offset) and a profile.
+
+        Learn is meant to fix the broad tonal balance, not to flatten the character of the source:
+          - the learned spectrum is viewed at ~1/2-octave resolution, so single notes, vowels and
+            formants are not "corrected" away
+          - deviations within ±tolerance dB of the profile are left alone
+          - only part of the remaining deviation is corrected, and large corrections are soft-limited
+            (boosts harder than cuts)
+          - boosts are only applied where the source has real content, and fade out at the extremes
+            (no lifting of rumble, pre-filtered lows or the noise floor up top)
+        At Correction = 100 % a typical result stays within roughly ±3–5 dB. */
+    struct CorrectionTuning
+    {
+        float viewSigma = 3.0f;        // bands (~0.47 oct) – smoothing of the learned spectrum
+        float tolerance = 1.0f;        // dB left uncorrected
+        float strength = 0.75f;        // fraction of the deviation beyond the tolerance
+        float maxBoost = 5.0f, maxCut = 8.0f;  // soft limits (dB)
+        float contentRange = 30.0f;    // boosts need content within this many dB of the spectral peak
+        float outSigma = 2.5f;         // bands – smoothing of the final curve
+    };
+
+    inline void computeCorrection (const float* learnedDb, int profile, float* out, const CorrectionTuning& tu = {})
+    {
+        std::array<float, numBands> L {};
+        smoothBands (learnedDb, L.data(), tu.viewSigma);
+        float maxL = -200.0f;
+        for (auto v : L) maxL = juce::jmax (maxL, v);
+
+        std::array<float, numBands> diff {}, content {};
+        std::array<float, numBands> mid {};   // no allocation: also called on the audio thread
+        int numMid = 0;
         for (int b = 0; b < numBands; ++b)
         {
             const float f = bandFreq (b);
-            diff[(size_t) b] = profileDb (profile, f) - learnedDb[b];
-            // bands with (almost) no content are left alone – boosting them only raises noise
-            const float t = juce::jlimit (0.0f, 1.0f, (learnedDb[b] - (maxL - 48.0f)) / 12.0f);
-            valid[(size_t) b] = t * t * (3.0f - 2.0f * t);
-            if (f >= 100.0f && f <= 8000.0f)
-            {
-                sum += valid[(size_t) b] * diff[(size_t) b];
-                wsum += valid[(size_t) b];
-            }
+            diff[(size_t) b] = profileDb (profile, f) - L[(size_t) b];
+            content[(size_t) b] = smoothstep (maxL - tu.contentRange, maxL - tu.contentRange + 12.0f, L[(size_t) b]);
+            if (f >= 150.0f && f <= 5000.0f && content[(size_t) b] > 0.5f)
+                mid[(size_t) numMid++] = diff[(size_t) b];
         }
-        const float offset = wsum > 0.0f ? sum / wsum : 0.0f;
+        // level reference: median deviation where the source lives (robust against one odd region)
+        float offset = 0.0f;
+        if (numMid > 0)
+        {
+            std::nth_element (mid.begin(), mid.begin() + numMid / 2, mid.begin() + numMid);
+            offset = mid[(size_t) (numMid / 2)];
+        }
 
         std::array<float, numBands> c {};
         for (int b = 0; b < numBands; ++b)
         {
-            float v = diff[(size_t) b] - offset;
-            v = v > 0.0f ? v * valid[(size_t) b] : v * (0.5f + 0.5f * valid[(size_t) b]);
-            c[(size_t) b] = juce::jlimit (-12.0f, 8.0f, v);
+            const float f = bandFreq (b);
+            const float d = diff[(size_t) b] - offset;
+            const float mag = juce::jmax (0.0f, std::abs (d) - tu.tolerance) * tu.strength;
+            if (d > 0.0f)
+            {
+                // boosts: soft-limited, only with content, faded out below ~100 Hz and above ~12 kHz
+                const float edge = smoothstep (70.0f, 140.0f, f) * (1.0f - 0.6f * smoothstep (10000.0f, 16000.0f, f));
+                c[(size_t) b] = tu.maxBoost * std::tanh (mag / tu.maxBoost) * content[(size_t) b] * edge;
+            }
+            else
+                c[(size_t) b] = -tu.maxCut * std::tanh (mag / tu.maxCut);
         }
-        smoothBands (c.data(), out, 2.2f);
+        smoothBands (c.data(), out, tu.outSigma);
     }
 
     //==========================================================================
@@ -253,9 +294,20 @@ namespace foss
             autoDb = 0.0f;
             outGain.reset (sr, 0.05);
             outGain.setCurrentAndTargetValue (1.0f);
-            learnAcc.fill (0.0);
+            maxLearnFrames = (int) std::ceil (learnSeconds / dt) + 4;
+            learnStore.assign ((size_t) maxLearnFrames * numBands, 0.0f);
+            learnLoud.assign ((size_t) maxLearnFrames, -200.0f);
+            learnScratch.assign ((size_t) maxLearnFrames, 0.0f);
             learnFrames = 0;
             learnedVersionSeen = -1;
+
+            for (int b = 0; b < numBands; ++b)
+            {
+                // rough loudness weighting (less weight to deep bass and extreme highs)
+                const float f = bandFreq (b);
+                const float lw = 1.0f / (1.0f + std::pow (120.0f / f, 2.0f)) / (1.0f + std::pow (f / 14000.0f, 2.0f));
+                loudnessWeight[(size_t) b] = (double) lw * (f > 1500.0f && f < 6000.0f ? 1.4 : 1.0);
+            }
         }
 
         void reset()
@@ -306,7 +358,6 @@ namespace foss
             const int cmd = shared.learnCommand.exchange (0);
             if (cmd == 1)
             {
-                learnAcc.fill (0.0);
                 learnFrames = 0;
                 shared.learnProgress.store (0.0f);
                 shared.learning.store (true);
@@ -317,16 +368,39 @@ namespace foss
                 shared.learning.store (false);
         }
 
+        /** Long-term spectrum of the collected frames.
+            - relative gate: only frames within 20 dB of the loud parts (no reverb tails, breaths or bleed)
+            - every frame contributes its spectral shape with equal weight, so a few loud notes
+              do not dominate the result */
         void finishLearning()
         {
             shared.learning.store (false);
-            if ((float) learnFrames * frameSeconds < minLearnSeconds)
+            const int n = learnFrames;
+            if ((float) n * frameSeconds < minLearnSeconds)
                 return;
+
+            std::copy (learnLoud.begin(), learnLoud.begin() + n, learnScratch.begin());
+            const int k90 = juce::jlimit (0, n - 1, (int) (0.9f * (float) n));
+            std::nth_element (learnScratch.begin(), learnScratch.begin() + k90, learnScratch.begin() + n);
+            const float gate = learnScratch[(size_t) k90] - 20.0f;
+
+            std::array<double, numBands> acc {};
+            int used = 0;
+            for (int i = 0; i < n; ++i)
+            {
+                if (learnLoud[(size_t) i] < gate) continue;
+                const float* e = &learnStore[(size_t) i * numBands];
+                const double norm = std::pow (10.0, -0.1 * (double) learnLoud[(size_t) i]);
+                for (int b = 0; b < numBands; ++b) acc[(size_t) b] += (double) e[b] * norm;
+                ++used;
+            }
+            if (used == 0) return;
+
             std::array<float, numBands> db {};
             float maxDb = -200.0f;
             for (int b = 0; b < numBands; ++b)
             {
-                db[(size_t) b] = 10.0f * std::log10 ((float) (learnAcc[(size_t) b] / (double) learnFrames) + 1.0e-20f);
+                db[(size_t) b] = 10.0f * std::log10 ((float) (acc[(size_t) b] / (double) used) + 1.0e-20f);
                 maxDb = juce::jmax (maxDb, db[(size_t) b]);
             }
             for (auto& v : db) v = juce::jmax (-120.0f, v - maxDb);
@@ -369,9 +443,16 @@ namespace foss
             const bool signalPresent = totalDb > -65.0f;
 
             // --- learn: long-term average of frames with signal ---
-            if (shared.learning.load (std::memory_order_relaxed) && signalPresent)
+            if (shared.learning.load (std::memory_order_relaxed) && signalPresent && learnFrames < maxLearnFrames)
             {
-                for (int b = 0; b < numBands; ++b) learnAcc[(size_t) b] += (double) bandLin[(size_t) b];
+                double loud = 0.0;
+                float* dst = &learnStore[(size_t) learnFrames * numBands];
+                for (int b = 0; b < numBands; ++b)
+                {
+                    dst[b] = bandLin[(size_t) b];
+                    loud += (double) bandLin[(size_t) b] * loudnessWeight[(size_t) b];
+                }
+                learnLoud[(size_t) learnFrames] = (float) (10.0 * std::log10 (loud + 1.0e-20));
                 ++learnFrames;
                 const float prog = (float) learnFrames * frameSeconds / learnSeconds;
                 shared.learnProgress.store (juce::jmin (1.0f, prog));
@@ -525,9 +606,6 @@ namespace foss
                 rangeW[(size_t) b] = rangeWeight (f, settings.lowHz, settings.highHz);
                 staticDb[(size_t) b] = corr[(size_t) b] * settings.correction * rangeW[(size_t) b]
                                        + tiltDb (settings.brighten, f) + bassDb (settings.bass, f);
-                // rough loudness weighting for auto gain (less weight to deep bass and extreme highs)
-                const float lw = 1.0f / (1.0f + std::pow (120.0f / f, 2.0f)) / (1.0f + std::pow (f / 14000.0f, 2.0f));
-                loudnessWeight[(size_t) b] = (double) lw * (f > 1500.0f && f < 6000.0f ? 1.4 : 1.0);
             }
         }
 
@@ -549,8 +627,8 @@ namespace foss
         float autoDb = 0.0f;
         juce::SmoothedValue<float, juce::ValueSmoothingTypes::Multiplicative> outGain;
 
-        std::array<double, numBands> learnAcc {};
-        int learnFrames = 0;
+        std::vector<float> learnStore, learnLoud, learnScratch;   // preallocated in prepare()
+        int learnFrames = 0, maxLearnFrames = 0;
 
         int learnedVersionSeen = -1, cachedProfile = -1;
         float cachedCorrection = -1, cachedBrighten = -9, cachedBass = -9, cachedLow = -1, cachedHigh = -1;

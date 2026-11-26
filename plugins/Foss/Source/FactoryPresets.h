@@ -37,10 +37,10 @@ namespace foss
             P ("Tale – Podkast",                         3,  35.0f, 50.0f,   0.0f,  10.0f,  0.0f,  70.0f),
             P ("Tale – Rydd opp i rom",                  3,  10.0f, 70.0f, -40.0f,   0.0f,-10.0f,  90.0f),
             // ---- Mix / master ----
-            P ("Mix – Lett touch",                       4,  15.0f, 15.0f,   0.0f,   0.0f,  0.0f,  20.0f, 20000.0f, 50.0f),
-            P ("Mix – Balanse",                          4,  30.0f, 30.0f,   0.0f,   0.0f,  0.0f,  20.0f, 20000.0f, 75.0f),
-            P ("Mix – Åpne toppen",                      4,  35.0f, 20.0f,  20.0f,  25.0f,  0.0f,  20.0f, 20000.0f, 60.0f),
-            P ("Mix – Rydd i mellomtonen",               4,  10.0f, 50.0f, -30.0f,   0.0f,  0.0f, 150.0f, 5000.0f, 60.0f),
+            P ("Mix – Lett touch",                       4,  15.0f, 15.0f,   0.0f,   0.0f,  0.0f,  20.0f, 20000.0f, 70.0f),
+            P ("Mix – Balanse",                          4,  30.0f, 30.0f,   0.0f,   0.0f,  0.0f),
+            P ("Mix – Åpne toppen",                      4,  35.0f, 20.0f,  20.0f,  25.0f,  0.0f,  20.0f, 20000.0f, 100.0f),
+            P ("Mix – Rydd i mellomtonen",               4,  10.0f, 50.0f, -30.0f,   0.0f,  0.0f, 150.0f, 5000.0f, 100.0f),
         };
     }
 }

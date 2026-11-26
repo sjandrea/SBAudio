@@ -378,7 +378,7 @@ FossEditor::FossEditor (FossProcessor& p)
     for (auto* k : { &bias, &brighten, &bass, &output })
         k->slider.getProperties().set ("bipolar", true);
 
-    correction.slider.setTooltip (utf8 ("Hvor mye av den lærte korreksjonskurven som brukes. 100 % = helt mot profilen."));
+    correction.slider.setTooltip (utf8 ("Hvor mye av den lærte korreksjonskurven som brukes. 100 % er en forsiktig, anbefalt mengde – over 100 % retter mer mot profilen."));
     recover.slider.setTooltip (utf8 ("Løfter frekvenser som er maskert eller underrepresentert, så detaljer kommer fram. Løfter aldri støy eller stillhet."));
     tame.slider.setTooltip (utf8 ("Demper frekvenser som stikker ut akkurat nå: resonanser, harde toner og dominerende områder."));
     bias.slider.setTooltip (utf8 ("Balanse mellom Recover og Tame. − = mer temming, + = mer løft."));

@@ -30,7 +30,17 @@ hver for seg.
 | **Profil** | Målkurven Learn sammenligner med: *Universell*, *Vokal*, *Akustisk gitar*, *Tale* eller *Mix / master*. Du kan bytte profil etter at Foss har lært. Kurven regnes ut på nytt med en gang. |
 | **LEARN** | Lytter i 10 s og lager korreksjonskurven. Trykk igjen for å stoppe tidligere (minst 2 s). |
 | **Nullstill** | Fjerner den lærte kurven. |
-| **Correction** | Hvor mye av korreksjonen som brukes (0–150 %). |
+| **Correction** | Hvor mye av korreksjonen som brukes (0–150 %). 100 % er en forsiktig, anbefalt mengde. Typisk holder kurven seg innenfor ±2–4 dB, med litt større kutt i dyp bass. Skru opp mot 150 % for å rette mer mot profilen. |
+
+Learn retter bare den grove balansen. Den skal ikke viske ut karakteren i stemmen eller instrumentet:
+
+- Formanter og enkelttoner påvirker ikke kurven, fordi Foss ser på spekteret med ca. en halv oktavs oppløsning.
+- Små avvik fra profilen (under ca. 1 dB) blir stående, og bare en del av større avvik rettes opp.
+- Store korreksjoner begrenses mykt: maks ca. +5 dB løft og −8 dB kutt.
+- Foss løfter bare der sporet har reelt innhold, og ikke i dyp bass (under ca. 100 Hz) eller helt på toppen. Lavkuttet
+  vokal får derfor ikke bunnen tilbake, og rumling og sus løftes ikke.
+- Pauser, pust, etterklang og lekkasje fra andre instrumenter (alt som er mer enn 20 dB under de sterke partiene)
+  teller ikke med. Hver del teller likt, så noen få sterke toner styrer ikke resultatet.
 
 Den lærte kurven lagres i Logic-prosjektet. Den beholdes når du bytter preset, fordi den hører til sporet og ikke
 til lyden i presetet.
@@ -103,8 +113,19 @@ Se rotens `README.md` for krav og detaljer.
 - **Adaptivt lag:** en rask konvolutt per bånd (12 ms attack / 100 ms release) sammenlignes med en utglattet
   spektralkonvolutt (ca. 0,6 oktav). Bånd under konvolutten løftes (Recover) og bånd over dempes (Tame). En port
   hindrer at støy og stillhet løftes. Kurven glattes over frekvens og tid: kutt går raskere enn løft.
-- **Learn:** gjennomsnittlig spektrum over rammer med signal, sammenlignet med profilen. Nivået normaliseres mellom
-  100 Hz og 8 kHz. Bånd uten innhold løftes ikke. Korreksjonen begrenses til −12/+8 dB og glattes (ca. 1/3 oktav).
+- **Learn:** lagrer spekteret for hver ramme (ca. 10 ms) i 10 s. Rammer mer enn 20 dB under 90-persentilen i
+  lydstyrke forkastes. Hver ramme normaliseres til egen lydstyrke før snittet, så spekterets *form* teller, ikke de
+  sterkeste partiene.
+- **Korreksjonen:**
+  - Det lærte spekteret glattes (ca. 1/2 oktav) og sammenlignes med profilen.
+  - Nivået settes ut fra medianavviket mellom 150 Hz og 5 kHz.
+  - Avvik innenfor ±1 dB rettes ikke, og 75 % av resten rettes.
+  - Kurven begrenses mykt med tanh (+5/−8 dB).
+  - Løft krever innhold innenfor 30 dB av spektertoppen og tones ut under 140 Hz og over 10 kHz.
+- **Målt på ekte vokal-, gitar- og mixspor** ved Correction 100 %: kurven avviker 1–3 dB RMS fra flat
+  (før denne versjonen: 3–6,5 dB). Kurven varierer under 1,2 dB med hvor i sporet du trykker LEARN (før: opptil 3,4 dB).
+- **Gitarprofilen** har en naturlig kropp på ca. +5 dB rundt 130–220 Hz. Det tilsvarer det som er målt på ekte
+  akustiske gitaropptak. Learn temmer derfor bare gitarer med uvanlig mye boom, i stedet for å gjøre alle gitarer tynne.
 - All gain er reell og jevn over frekvens, så EQ-en er nullfase. Mix og Delta regnes ut i frekvensdomenet og er derfor
   fasekorrekte.
 - Auto gain sammenligner nivå før og etter med en enkel lydstyrkevekting (mindre vekt på dyp bass og ekstrem diskant).
