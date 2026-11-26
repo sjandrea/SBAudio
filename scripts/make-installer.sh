@@ -15,15 +15,23 @@ export COPYFILE_DISABLE=1
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-PLUGINS=()
+# Sortert etter kategori (scripts/categories.sh) – kompressorer sammen, romklang og delay sammen osv.
+source scripts/categories.sh
+DIRS=()
 for d in plugins/*/; do
   n="$(basename "$d")"
   [[ "$n" == _* ]] && continue
   [ -f "$d/CMakeLists.txt" ] || continue
-  PRODUCT=$(sed -n 's/.*PRODUCT_NAME *"\(.*\)".*/\1/p' "$d/CMakeLists.txt" | head -1)
+  DIRS+=("$n")
+done
+PLUGINS=()      # produktnavn
+PLUGIN_CATS=()  # kategorinøkkel per plugin
+while IFS= read -r n; do
+  PRODUCT=$(sed -n 's/.*PRODUCT_NAME *"\(.*\)".*/\1/p' "plugins/$n/CMakeLists.txt" | head -1)
   [ -d "dist/$PRODUCT.component" ] || [ -d "dist/$PRODUCT.vst3" ] || { echo "Hopper over $PRODUCT (ikke i dist/)"; continue; }
   PLUGINS+=("$PRODUCT")
-done
+  PLUGIN_CATS+=("$(sbaudio_category "plugins/$n" 2>/dev/null)")
+done < <(sbaudio_sort_plugins ${DIRS[@]+"${DIRS[@]}"})
 [ ${#PLUGINS[@]} -gt 0 ] || { echo "Ingen plugins i dist/. Kjør scripts/build.sh --all først."; exit 1; }
 
 VERSION="${1:-$(cat VERSION 2>/dev/null)}"   # installasjonsversjon, se scripts/release.sh
@@ -70,7 +78,18 @@ plugin_description() { # første linje i pluginens README, f.eks. «OptoTube –
   [ -f "$readme" ] && sed -n '1s/^# *//p' "$readme" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/"/\&quot;/g' || echo "$1"
 }
 
-for p in "${PLUGINS[@]}"; do
+CUR_CAT=""
+for idx in "${!PLUGINS[@]}"; do
+  p="${PLUGINS[$idx]}"
+  cat_key="${PLUGIN_CATS[$idx]}"
+  if [ "$cat_key" != "$CUR_CAT" ]; then # ny kategori: egen gruppe i «Tilpass»-skjermen
+    [ -n "$CUR_CAT" ] && CHOICES_OUTLINE+="        </line>"$'\n'
+    cat_id="com.sbaudio.category.$(echo "$cat_key" | tr '[:upper:]' '[:lower:]')"
+    cat_title=$(sbaudio_category_title "$cat_key")
+    CHOICES_OUTLINE+="        <line choice=\"$cat_id\">"$'\n'
+    CHOICES+="    <choice id=\"$cat_id\" title=\"$cat_title\" description=\"$cat_title\"/>"$'\n'
+    CUR_CAT="$cat_key"
+  fi
   lower=$(echo "$p" | tr '[:upper:]' '[:lower:]')
   GROUP_LINES=""
   [ -d "dist/$p.component" ] && add_pkg "dist/$p.component" /Library/Audio/Plug-Ins/Components \
@@ -80,12 +99,22 @@ for p in "${PLUGINS[@]}"; do
   CHOICES_OUTLINE+="        <line choice=\"com.sbaudio.$lower\">"$'\n'"$GROUP_LINES        </line>"$'\n'
   CHOICES+="    <choice id=\"com.sbaudio.$lower\" title=\"$p\" description=\"$(plugin_description "$p")\"/>"$'\n'
 done
+[ -n "$CUR_CAT" ] && CHOICES_OUTLINE+="        </line>"$'\n'
 
-LIST=$(printf '<li>%s</li>' "${PLUGINS[@]}")
+LIST=""; CUR_CAT=""
+for idx in "${!PLUGINS[@]}"; do
+  if [ "${PLUGIN_CATS[$idx]}" != "$CUR_CAT" ]; then
+    [ -n "$CUR_CAT" ] && LIST+="</ul>"
+    CUR_CAT="${PLUGIN_CATS[$idx]}"
+    LIST+="<p style=\"margin-bottom:2px\"><b>$(sbaudio_category_title "$CUR_CAT")</b></p><ul style=\"margin-top:2px\">"
+  fi
+  LIST+="<li>${PLUGINS[$idx]}</li>"
+done
+[ -n "$CUR_CAT" ] && LIST+="</ul>"
 cat > "$WORK/resources/welcome.html" <<EOF
 <html><body style="font-family:-apple-system,sans-serif;font-size:13px">
 <h2>SLOWHAND $VERSION</h2>
-<p>Denne pakken installerer:</p><ul>$LIST</ul>
+<p>Denne pakken installerer:</p>$LIST
 <p>Audio Unit-versjonene legges i <code>/Library/Audio/Plug-Ins/Components</code>,
 VST3 i <code>/Library/Audio/Plug-Ins/VST3</code>. På neste side velger du hvilke plugins
 (og formater) som skal installeres.</p>

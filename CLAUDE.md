@@ -62,7 +62,9 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
    SATURATION. Skriv aldri «SB Audio» i grensesnittet. Presets: `sbaudio::PresetManager` (fabrikk + egne i
    `~/Library/Audio/Presets/SB Audio/<Navn>`) og `sbaudio::PresetBar` – se OptoTube for et enkelt eksempel.
 3. Legg pluginen inn i registeret over og lag en `README.md` (samme oppbygging som VoxPilot), `docs/screenshot.png`
-   og `docs/installer.txt` (2–3 setninger som vises i installasjonsappen).
+   og `docs/installer.txt` (2–3 setninger som vises i installasjonsappen) og `docs/category.txt` (én av nøklene i
+   `scripts/categories.sh`, f.eks. `Dynamikk`, `EQ`, `Metning`, `Rom`, `Mastering`, `Instrument` – styrer grupperingen
+   i installasjonsfilene).
 4. Bygg med `scripts/build.sh <Navn>` og sørg for at `auval` passerer.
 
 ## Bygging

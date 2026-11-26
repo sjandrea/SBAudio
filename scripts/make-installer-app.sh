@@ -10,6 +10,7 @@
 # Per plugin brukes:
 #   plugins/<Navn>/docs/screenshot.png  – bildet på kortet
 #   plugins/<Navn>/docs/installer.txt   – kort beskrivelse (2–3 setninger)
+#   plugins/<Navn>/docs/category.txt    – gruppe i installasjonsappen (se scripts/categories.sh)
 #   plugins/<Navn>/README.md            – første linje gir undertittelen
 #
 # Signering (valgfritt): sett SBAUDIO_APP_IDENTITY til en «Developer ID Application: …»-
@@ -29,6 +30,12 @@ for d in plugins/*/; do
   PLUGINS+=("$n")
 done
 [ ${#PLUGINS[@]} -gt 0 ] || { echo "Ingen plugins i dist/. Kjør scripts/build.sh --all først."; exit 1; }
+
+# Sorter etter kategori (scripts/categories.sh) – kompressorer sammen, romklang og delay sammen osv.
+source scripts/categories.sh
+SORTED=()
+while IFS= read -r n; do SORTED+=("$n"); done < <(sbaudio_sort_plugins "${PLUGINS[@]}")
+PLUGINS=("${SORTED[@]}")
 
 VERSION="${1:-$(cat VERSION 2>/dev/null)}"   # installasjonsversjon, se scripts/release.sh
 VERSION="${VERSION:-1.0.0}"
@@ -77,6 +84,7 @@ for n in "${PLUGINS[@]}"; do
   plutil -insert "plugins.$i.name" -string "$PRODUCT" "$MANIFEST"
   plutil -insert "plugins.$i.tagline" -string "$tagline" "$MANIFEST"
   plutil -insert "plugins.$i.summary" -string "$summary" "$MANIFEST"
+  plutil -insert "plugins.$i.category" -string "$(sbaudio_category_title "$(sbaudio_category "$dir" 2>/dev/null)")" "$MANIFEST"
   plutil -insert "plugins.$i.hasAU" -bool "$hasAU" "$MANIFEST"
   plutil -insert "plugins.$i.hasVST3" -bool "$hasVST3" "$MANIFEST"
   i=$((i + 1))

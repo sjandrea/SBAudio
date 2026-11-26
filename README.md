@@ -56,6 +56,9 @@ Plugins som allerede er installert, får merket *INSTALLERT*. Appen ber om admin
 `/Library/Audio/Plug-Ins`. Den kan også fjerne gamle kopier i `~/Library/Audio/Plug-Ins` fra `scripts/build.sh`.
 
 Kortene bygges av `plugins/<Navn>/docs/screenshot.png` (bildet) og `plugins/<Navn>/docs/installer.txt` (2–3 setninger).
+Pluginene vises gruppert etter `plugins/<Navn>/docs/category.txt`: kompressorer og dynamikk, EQ, metning, romklang og
+delay, mastering og til slutt instrumenter. Kategoriene og rekkefølgen står i `scripts/categories.sh`, og pkg-en
+grupperer på samme måte.
 Undertittelen hentes fra første linje i pluginens `README.md`. Kildekoden ligger i `installer/SBAudioInstaller.swift`.
 
 Appen er ad-hoc-signert. Første gang: høyreklikk › **Åpne**. Den kan også åpnes via **Systeminnstillinger › Personvern og

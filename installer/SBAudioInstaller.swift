@@ -17,7 +17,14 @@ struct PluginInfo: Decodable, Identifiable {
     let summary: String
     let hasAU: Bool
     let hasVST3: Bool
+    let category: String?   // section heading, e.g. «Kompressorer og dynamikk» (manifest is pre-sorted)
     var id: String { name }
+}
+
+struct PluginSection: Identifiable {
+    let title: String
+    let plugins: [PluginInfo]
+    var id: String { title }
 }
 
 struct Manifest: Decodable {
@@ -79,6 +86,25 @@ final class InstallerModel: ObservableObject {
             [Paths.userComponents.appendingPathComponent("\(p.name).component"),
              Paths.userVST3.appendingPathComponent("\(p.name).vst3")]
         }.filter { fm.fileExists(atPath: $0.path) }
+    }
+
+    /// Consecutive plugins with the same category form one section, in manifest order.
+    var sections: [PluginSection] {
+        var out: [PluginSection] = []
+        for p in manifest.plugins {
+            let t = p.category ?? "Plugins"
+            if let last = out.last, last.title == t {
+                out[out.count - 1] = PluginSection(title: t, plugins: last.plugins + [p])
+            } else {
+                out.append(PluginSection(title: t, plugins: [p]))
+            }
+        }
+        return out
+    }
+
+    func toggleSection(_ s: PluginSection) {
+        let names = Set(s.plugins.map(\.name))
+        if names.isSubset(of: selected) { selected.subtract(names) } else { selected.formUnion(names) }
     }
 
     var canInstall: Bool { !selected.isEmpty && (installAU || installVST3) }
@@ -188,6 +214,24 @@ struct CheckMark: View {
             }
         }
         .frame(width: 20, height: 20)
+    }
+}
+
+struct SectionHeader: View {
+    let section: PluginSection
+    let allOn: Bool
+    let action: () -> Void
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text(section.title.uppercased())
+                .font(.system(size: 12, weight: .bold)).tracking(2).foregroundColor(.sbAccent)
+            Text("\(section.plugins.count)").font(.system(size: 11)).foregroundColor(.sbDim)
+            Rectangle().fill(Color.sbEdge).frame(height: 1).alignmentGuide(.firstTextBaseline) { d in d[.bottom] + 4 }
+            Button(allOn ? "Velg bort gruppen" : "Velg gruppen", action: action)
+                .buttonStyle(PlainButtonStyle())
+                .font(.system(size: 11)).foregroundColor(.sbDim)
+        }
     }
 }
 
@@ -311,10 +355,20 @@ struct ContentView: View {
     var chooser: some View {
         VStack(spacing: 0) {
             ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 380), spacing: 16)], spacing: 16) {
-                    ForEach(model.manifest.plugins) { p in
-                        PluginCard(plugin: p, selected: model.selected.contains(p.name),
-                                   installed: model.isInstalled(p)) { model.toggle(p) }
+                VStack(alignment: .leading, spacing: 26) {
+                    ForEach(model.sections) { section in
+                        VStack(alignment: .leading, spacing: 12) {
+                            SectionHeader(section: section,
+                                          allOn: Set(section.plugins.map(\.name)).isSubset(of: model.selected)) {
+                                model.toggleSection(section)
+                            }
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 380), spacing: 16)], spacing: 16) {
+                                ForEach(section.plugins) { p in
+                                    PluginCard(plugin: p, selected: model.selected.contains(p.name),
+                                               installed: model.isInstalled(p)) { model.toggle(p) }
+                                }
+                            }
+                        }
                     }
                 }
                 .padding(24)
