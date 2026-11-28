@@ -15,6 +15,7 @@ Audio Unit- og VST3-plugins for Logic Pro.
 | [Domina](plugins/Domina/README.md) | Smart mastering (à la LANDR): analyse, stil, loudness-mål, multiband-kompresjon og true-peak-limiter |
 | [Stressulf](plugins/Stressulf/README.md) | Karakterkompressor (à la Distressor): fast terskel, ratio 1:1–NUKE og OPTO, Dist 2/3, detektor-HP/band og SMASH |
 | [Dovregubben](plugins/Dovregubben/README.md) | Karakter-delay (à la Valhalla Delay): Tape, HiFi, BBD, Digital, Pitch, Reverse og Ghost, med dobling, ducking og diffusjon |
+| [Renske](plugins/Renske/README.md) | Reparasjonskjede (à la RX): de-clip, de-click, de-crackle, munnklikk, de-hum, de-plosive, de-bleed, de-noise, dialog-isolering, de-reverb, pustekontroll, de-ess og rebalanse, med assistent |
 
 ## Bygge på Mac
 

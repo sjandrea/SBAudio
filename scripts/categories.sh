@@ -9,6 +9,7 @@ SBAUDIO_CATEGORIES=(
   "Metning|Metning"
   "Rom|Romklang og delay"
   "Mastering|Mastering"
+  "Reparasjon|Reparasjon og opprydding"
   "Annet|Andre effekter"
   "Instrument|Instrumenter"
 )

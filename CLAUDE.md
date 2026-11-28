@@ -51,6 +51,7 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
 | Domina   | `Glns`      | aufx    | Mastering: analyse, stil, loudness-mål, true-peak-limiter (à la LANDR). Het Glans før – koden er beholdt |
 | Stressulf | `Strs`     | aufx    | Karakterkompressor med Dist 2/3, Nuke, Opto og Smash (à la Distressor) |
 | Dovregubben | `Dovr`   | aufx    | Karakter-delay: Tape, HiFi, BBD, Digital, Pitch, Reverse, Ghost + dobling (à la Valhalla Delay) |
+| Renske   | `Rnsk`      | aufx    | Reparasjonskjede: de-clip, de-click, de-hum, de-noise, de-reverb, de-ess, rebalanse m.m. + assistent (à la RX) |
 
 ## Ny plugin
 
@@ -63,7 +64,7 @@ README-er og brukertekster skrives på norsk, kode og kommentarer i koden kan v�
    `~/Library/Audio/Presets/SB Audio/<Navn>`) og `sbaudio::PresetBar` – se OptoTube for et enkelt eksempel.
 3. Legg pluginen inn i registeret over og lag en `README.md` (samme oppbygging som VoxPilot), `docs/screenshot.png`
    og `docs/installer.txt` (2–3 setninger som vises i installasjonsappen) og `docs/category.txt` (én av nøklene i
-   `scripts/categories.sh`, f.eks. `Dynamikk`, `EQ`, `Metning`, `Rom`, `Mastering`, `Instrument` – styrer grupperingen
+   `scripts/categories.sh`, f.eks. `Dynamikk`, `EQ`, `Metning`, `Rom`, `Mastering`, `Reparasjon`, `Instrument` – styrer grupperingen
    i installasjonsfilene).
 4. Bygg med `scripts/build.sh <Navn>` og sørg for at `auval` passerer.
 
